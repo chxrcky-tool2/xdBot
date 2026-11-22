@@ -34,6 +34,15 @@ protected:
     }
 };
 
+inline void closePopupBack(geode::Popup* p) {
+    if (p) static_cast<FLAlertLayer*>(p)->keyBackClicked();
+}
+
+inline void setPlaceholderDim(CCTextInputNode* node, bool dim) {
+    if (!node) return;
+    node->setLabelPlaceholderColor(dim ? ccColor3B{ 100, 100, 100 } : ccColor3B{ 255, 255, 255 });
+}
+
 const int indexButton[6] = { 1, 2, 3, 1, 2, 3 };
 
 const std::map<int, int> buttonIndex[2] = { { {1, 0}, {2, 1}, {3, 2} }, { {1, 3}, {2, 4}, {3, 5} } };
