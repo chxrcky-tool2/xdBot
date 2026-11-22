@@ -61,6 +61,14 @@ public:
 
     static bool loadXDFile(std::filesystem::path path);
 
+    // Loads any supported macro file (.xd / .gdr / .json). Returns a macro whose description is "fail" on error.
+    // `legacy` is set when the file is an old text-based xdBot .xd macro.
+    static Macro importFile(std::filesystem::path path, bool* legacy = nullptr);
+
+    // Old xdBot .xd macros are plain text ("fps" line + "frame|hold|btn|p2|..." lines).
+    // New .xd files hold the same data as .gdr (msgpack, or JSON when saved as readable).
+    static bool isLegacyXD(std::vector<uint8_t> const& data);
+
     static Macro XDtoGDR(std::filesystem::path path);
 
     static void resetVariables();

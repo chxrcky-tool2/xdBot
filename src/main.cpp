@@ -1,6 +1,6 @@
 #include "includes.hpp"
 
-#include "ui/record_layer.hpp"
+#include "ui/xd_menu.hpp"
 #include "practice_fixes/practice_fixes.hpp"
 #include "hacks/layout_mode.hpp"
 
@@ -152,7 +152,6 @@ class $modify(PlayLayer) {
       g.checkpoints.clear();
 
       g.macro.framerate = 240.f;
-      if (g.layer) static_cast<RecordLayer*>(g.layer)->updateTPS();
 
       PlayerData p1Data = PlayerPracticeFixes::saveData(m_player1);
       PlayerData p2Data = PlayerPracticeFixes::saveData(m_player2);

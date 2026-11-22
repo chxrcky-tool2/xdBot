@@ -1,4 +1,4 @@
-#include "ui/record_layer.hpp"
+#include "ui/xd_menu.hpp"
 #include "ui/game_ui.hpp"
 
 #include <Geode/modify/CCTextInputNode.hpp>
@@ -230,10 +230,6 @@ void Global::toggleSpeedhack() {
   g.mod->setSavedValue("macro_speedhack_enabled", !g.mod->getSavedValue<bool>("macro_speedhack_enabled"));
   g.speedhackEnabled = g.mod->getSavedValue<bool>("macro_speedhack_enabled");
 
-  if (g.layer) {
-    if (static_cast<RecordLayer*>(g.layer)->speedhackToggle)
-      static_cast<RecordLayer*>(g.layer)->speedhackToggle->toggle(g.mod->getSavedValue<bool>("macro_speedhack_enabled"));
-  }
 
   if (!g.mod->getSavedValue<bool>("macro_speedhack_enabled"))
     Global::updatePitch(1.f);
@@ -252,10 +248,6 @@ void Global::frameStepperOn() {
   g.mod->setSavedValue("macro_frame_stepper", true);
   g.frameStepper = true;
 
-  if (g.layer) {
-    if (static_cast<RecordLayer*>(g.layer)->frameStepperToggle)
-      static_cast<RecordLayer*>(g.layer)->frameStepperToggle->toggle(true);
-  }
 
   if (PlayLayer::get())
     g.frameStepperMusicTime = FMODAudioEngine::sharedEngine()->getMusicTimeMS(0);
@@ -276,10 +268,6 @@ void Global::frameStepperOff() {
     g.frameStepperMusicTime = 0;
   }
 
-  if (g.layer) {
-    if (static_cast<RecordLayer*>(g.layer)->frameStepperToggle)
-      static_cast<RecordLayer*>(g.layer)->frameStepperToggle->toggle(false);
-  }
 
   Interface::updateButtons();
 }

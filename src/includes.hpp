@@ -141,7 +141,6 @@ public:
     static PauseLayer* getPauseLayer();
 
     Mod* mod = Mod::get();
-    geode::Popup* layer = nullptr;
 
     Macro macro;
     state state = none;

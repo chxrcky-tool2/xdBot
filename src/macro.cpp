@@ -1,5 +1,5 @@
 #include "includes.hpp"
-#include "ui/record_layer.hpp"
+#include "ui/xd_menu.hpp"
 #include "ui/game_ui.hpp"
 
 #include <Geode/modify/PlayLayer.hpp>
@@ -78,7 +78,7 @@ void Macro::tryAutosave(GJGameLevel* level, CheckpointObject* cp) {
     std::string levelname = level->m_levelName;
     std::filesystem::path path = autoSavesPath / fmt::format("autosave_{}_{}", levelname, g.currentSession);
     std::error_code ec;
-    std::filesystem::remove(path.string() + ".gdr", ec); // Remove previous save
+    std::filesystem::remove(path.string() + ".xd", ec); // Remove previous save
     if (ec) log::warn("Failed to remove previous autosave");
 
     autoSave(level, g.currentSession);
@@ -136,7 +136,6 @@ void Macro::updateTPS() {
         g.mod->setSavedValue("macro_tps_enabled", g.tpsEnabled);
     }
 
-    if (g.layer) static_cast<RecordLayer*>(g.layer)->updateTPS();
 }
 
 int Macro::save(std::string author, std::string desc, std::string path, bool json) {
@@ -144,7 +143,9 @@ int Macro::save(std::string author, std::string desc, std::string path, bool jso
 
     if (g.macro.inputs.empty()) return 31;
 
-    std::string extension = json ? ".gdr.json" : ".gdr";
+    // Every macro is saved as .xd. `json` only changes the payload (readable JSON instead of msgpack),
+    // the loader detects which one it is from the content.
+    std::string extension = ".xd";
 
     int iterations = 0;
 
@@ -199,6 +200,57 @@ bool Macro::loadXDFile(std::filesystem::path path) {
 
     Global::get().macro = newMacro;
     return true;
+}
+
+bool Macro::isLegacyXD(std::vector<uint8_t> const& data) {
+    if (data.empty()) return false;
+
+    // msgpack maps start with 0x80-0x8f / 0xde / 0xdf, JSON starts with '{' (after optional whitespace)
+    uint8_t first = data[0];
+    if (first >= 0x80) return false;
+
+    for (uint8_t c : data) {
+        if (c == ' ' || c == '\t' || c == '\r' || c == '\n') continue;
+        if (c == '{') return false;
+        break;
+    }
+
+    // old text format: first line is "android" or the fps, following lines contain '|'
+    return std::find(data.begin(), data.end(), static_cast<uint8_t>('|')) != data.end() || first == 'a';
+}
+
+Macro Macro::importFile(std::filesystem::path path, bool* legacy) {
+    if (legacy) *legacy = false;
+
+    std::ifstream f(path, std::ios::binary);
+    if (!f) {
+        Macro fail;
+        fail.description = "fail";
+        return fail;
+    }
+
+    std::vector<uint8_t> data((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
+    f.close();
+
+    Macro fail;
+    fail.description = "fail";
+
+    try {
+        if (path.extension() == ".xd" && Macro::isLegacyXD(data)) {
+            if (legacy) *legacy = true;
+            return Macro::XDtoGDR(path);
+        }
+
+        Macro macro = Macro::importData(data);
+
+        // importData returns an empty replay when the data can't be parsed
+        if (macro.inputs.empty() && macro.frameFixes.empty()) return fail;
+
+        return macro;
+    }
+    catch (...) {
+        return fail;
+    }
 }
 
 Macro Macro::XDtoGDR(std::filesystem::path path) {
@@ -298,33 +350,11 @@ void Macro::resetState(bool cp) {
 }
 
 void Macro::togglePlaying() {
-    if (Global::hasIncompatibleMods()) return;
-
-    auto& g = Global::get();
-    
-    if (g.layer) {
-        static_cast<RecordLayer*>(g.layer)->playing->toggle(Global::get().state != state::playing);
-        static_cast<RecordLayer*>(g.layer)->togglePlaying(nullptr);
-    } else {
-        RecordLayer* layer = RecordLayer::create();
-        layer->togglePlaying(nullptr);
-        layer->onClose(nullptr);
-    }
+    XDMenu::togglePlaying();
 }
 
 void Macro::toggleRecording() {
-    if (Global::hasIncompatibleMods()) return;
-    
-    auto& g = Global::get();
-    
-    if (g.layer) {
-        static_cast<RecordLayer*>(g.layer)->recording->toggle(Global::get().state != state::recording);
-        static_cast<RecordLayer*>(g.layer)->toggleRecording(nullptr);
-    } else {
-        RecordLayer* layer = RecordLayer::create();
-        layer->toggleRecording(nullptr);
-        layer->onClose(nullptr);
-    }
+    XDMenu::toggleRecording();
 }
 
 bool Macro::shouldStep() {
