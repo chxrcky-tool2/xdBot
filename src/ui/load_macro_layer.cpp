@@ -25,7 +25,7 @@ class $modify(CCMenu) {
 	}
 };
 
-void LoadMacroLayer::open(geode::Popup<>* layer, geode::Popup<>* layer2, bool autosaves) {
+void LoadMacroLayer::open(geode::Popup* layer, geode::Popup* layer2, bool autosaves) {
 	std::filesystem::path path = Mod::get()->getSettingValue<std::filesystem::path>("macros_folder");
 
 	if (!std::filesystem::exists(path)) {
@@ -126,7 +126,7 @@ void LoadMacroLayer::onSelectAll(CCObject* obj) {
 	}
 }
 
-LoadMacroLayer* LoadMacroLayer::create(geode::Popup<>* layer, geode::Popup<>* layer2, bool autosaves) {
+LoadMacroLayer* LoadMacroLayer::create(geode::Popup* layer, geode::Popup* layer2, bool autosaves) {
 	LoadMacroLayer* ret = new LoadMacroLayer();
 	if (ret->initAnchored(385, 291, layer, layer2, autosaves, Utils::getTexture().c_str())) {
 		ret->autorelease();
@@ -214,11 +214,9 @@ void LoadMacroLayer::onImportMacro(CCObject*) {
 		});
 }
 
-bool LoadMacroLayer::setup(geode::Popup<>* layer, geode::Popup<>* layer2, bool autosaves) {
+bool LoadMacroLayer::setup(geode::Popup* layer, geode::Popup* layer2, bool autosaves) {
 
-	#ifdef GEODE_IS_ANDROID
 	invertSort = true;
-	#endif
 
 	menu = CCMenu::create();
 	menu->setZOrder(110);
@@ -403,9 +401,7 @@ void LoadMacroLayer::updateSort(CCObject*) {
 
 	invertSort = !sortToggle->isToggled();
 
-	#ifdef GEODE_IS_ANDROID
 	invertSort = !invertSort;
-	#endif
 
 	reloadList(0);
 }
@@ -431,9 +427,6 @@ void LoadMacroLayer::addList(bool refresh, float prevScroll) {
 
 		std::time_t date;
 
-#ifdef GEODE_IS_WINDOWS
-		date = Utils::getFileCreationTime(macros[i]);
-#endif
 
 		MacroCell* cell = MacroCell::create(macros[i], name, date, menuLayer, mergeLayer, static_cast<CCLayer*>(this));
 		cells->addObject(cell);
@@ -546,7 +539,7 @@ void LoadMacroLayer::addList(bool refresh, float prevScroll) {
 	}
 }
 
-MacroCell* MacroCell::create(std::filesystem::path path, std::string name, std::time_t date, geode::Popup<>* menuLayer, geode::Popup<>* mergeLayer, CCLayer* loadLayer) {
+MacroCell* MacroCell::create(std::filesystem::path path, std::string name, std::time_t date, geode::Popup* menuLayer, geode::Popup* mergeLayer, CCLayer* loadLayer) {
 	MacroCell* ret = new MacroCell();
 	if (!ret->init(path, name, date, menuLayer, mergeLayer, loadLayer)) {
 		delete ret;
@@ -557,7 +550,7 @@ MacroCell* MacroCell::create(std::filesystem::path path, std::string name, std::
 	return ret;
 }
 
-bool MacroCell::init(std::filesystem::path path, std::string name, std::time_t date, geode::Popup<>* menuLayer, geode::Popup<>* mergeLayer, CCLayer* loadLayer) {
+bool MacroCell::init(std::filesystem::path path, std::string name, std::time_t date, geode::Popup* menuLayer, geode::Popup* mergeLayer, CCLayer* loadLayer) {
 
 	this->path = path;
 	this->date = date;
@@ -598,17 +591,9 @@ bool MacroCell::init(std::filesystem::path path, std::string name, std::time_t d
 
 	lbl->setPosition({ 10, 23 });
 
-#ifdef GEODE_IS_WINDOWS
-	std::string subText = Utils::formatTime(date) + " | ";
-
-	subText += autosave ? "Auto Save" : path.extension().string();
-
-	lbl = CCLabelBMFont::create(subText.c_str(), "chatFont.fnt");
-#else
 	std::string subText = autosave ? "Auto Save" : path.extension().string();
 
 	lbl = CCLabelBMFont::create(subText.c_str(), "chatFont.fnt");
-#endif
 
 	lbl->setPosition({ 10, 9 });
 	lbl->setScale(0.55f);
