@@ -86,7 +86,7 @@ class $modify(PauseLayer) {
 };
 
 $execute{
-    geode::listenForSettingChanges("frame_offset", +[](int64_t value) {
+    geode::listenForSettingChanges<int64_t>("frame_offset", [](int64_t value) {
         auto& g = Global::get();
         g.frameOffset = value;
 
@@ -98,7 +98,7 @@ $execute{
 
   });
 
-    geode::listenForSettingChanges("background_color", +[](cocos2d::ccColor3B value) {
+    geode::listenForSettingChanges<cocos2d::ccColor3B>("background_color", [](cocos2d::ccColor3B value) {
         auto& g = Global::get();
         if (g.layer) {
             CCArray* children = CCDirector::sharedDirector()->getRunningScene()->getChildren();
