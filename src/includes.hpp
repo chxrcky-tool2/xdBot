@@ -9,13 +9,30 @@
 #include <queue>
 #include <cmath>
 #include <vector>
+#include <map>
+#include <unordered_map>
+#include <unordered_set>
+#include <chrono>
+#include <random>
+#include <fstream>
+#include <filesystem>
 
-#include "renderer/renderer.hpp"
 #include "macro.hpp"
 
 using namespace geode::prelude;
 
-const int seedAddr = 0x6a4e20;
+// Geode 5 made geode::Popup a plain class (init() instead of setup()/initAnchored()).
+// This keeps the old setup(args...) + initAnchored(w, h, args..., bg) pattern working for every popup in the mod.
+template <class... Args>
+class PopupCompat : public geode::Popup {
+protected:
+    virtual bool setup(Args... args) = 0;
+
+    bool initAnchored(float width, float height, Args... args, char const* bg = "GJ_square01.png", cocos2d::CCRect bgRect = {}) {
+        if (!geode::Popup::init(width, height, bg)) return false;
+        return this->setup(std::forward<Args>(args)...);
+    }
+};
 
 const int indexButton[6] = { 1, 2, 3, 1, 2, 3 };
 
@@ -79,10 +96,9 @@ public:
     static PauseLayer* getPauseLayer();
 
     Mod* mod = Mod::get();
-    geode::Popup<>* layer = nullptr;
+    geode::Popup* layer = nullptr;
 
     Macro macro;
-    Renderer renderer;
     state state = none;
 
     std::unordered_map<CheckpointObject*, CheckpointData> checkpoints;

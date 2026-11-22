@@ -61,8 +61,6 @@ class $modify(PlayLayer) {
   void pauseGame(bool b1) {
     Global::updateKeybinds();
 
-    if (!Global::get().renderer.tryPause()) return;
-
     auto& g = Global::get();
 
     if (!m_player1 || !m_player2) return PlayLayer::pauseGame(b1);
@@ -130,9 +128,6 @@ class $modify(PlayLayer) {
     auto& g = Global::get();
 
     int frame = Global::getCurrentFrame();
-
-    if (!m_isPracticeMode)
-      g.renderer.levelStartFrame = frame;
 
     if (g.restart && m_levelSettings->m_platformerMode && g.state != state::none)
       m_fields->delayedLevelRestart = frame + 2;
@@ -209,20 +204,13 @@ class $modify(BGLHook, GJBaseGameLayer) {
 
     Global::updateSeed();
 
-    bool rendering = g.renderer.recording || g.renderer.recordingAudio;
-
-    if (g.state != state::none || rendering) {
-
-      if (!g.firstAttempt) {
-        g.renderer.dontRender = false;
-        g.renderer.dontRecordAudio = false;
-      }
+    if (g.state != state::none) {
 
       int frame = Global::getCurrentFrame();
       if (frame > 2 && g.firstAttempt && g.macro.xdBotMacro) {
         g.firstAttempt = false;
 
-        if ((m_levelSettings->m_platformerMode || rendering) && !m_levelEndAnimationStarted)
+        if (m_levelSettings->m_platformerMode && !m_levelEndAnimationStarted)
           return pl->resetLevelFromStart();
         else if (!m_levelEndAnimationStarted)
           return pl->resetLevel();
@@ -242,7 +230,7 @@ class $modify(BGLHook, GJBaseGameLayer) {
     g.previousFrame = frame;
 
     if (g.macro.xdBotMacro && g.restart && !m_levelEndAnimationStarted) {
-      if ((m_levelSettings->m_platformerMode && g.state != state::none) || g.renderer.recording || g.renderer.recordingAudio)
+      if (m_levelSettings->m_platformerMode && g.state != state::none)
         return pl->resetLevelFromStart();
       else
         return pl->resetLevel();
@@ -455,24 +443,12 @@ class $modify(PauseLayer) {
     PauseLayer::onQuit(sender);
 
     Macro::resetState();
-
-    Loader::get()->queueInMainThread([] {
-      auto& g = Global::get();
-      if (g.renderer.recording) g.renderer.stop();
-      if (g.renderer.recordingAudio) g.renderer.stopAudio();
-    });
   }
 
   void goEdit() {
     PauseLayer::goEdit();
 
     Macro::resetState();
-    
-    Loader::get()->queueInMainThread([] {
-      auto& g = Global::get();
-      if (g.renderer.recording) g.renderer.stop();
-      if (g.renderer.recordingAudio) g.renderer.stopAudio();
-    });
   }
 
 };

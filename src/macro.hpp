@@ -84,14 +84,6 @@ struct button {
 };
 
 struct PlayerData {
-#ifdef GEODE_IS_WINDOWS
-    std::unordered_map<int, GJPointDouble> m_rotateObjectsRelated;
-    std::unordered_map<int, GameObject*> m_maybeRotatedObjectsMap;
-    std::unordered_set<int> m_touchedRings;
-    std::unordered_set<int> m_ringRelatedSet;
-    std::map<int, bool> m_jumpPadRelated;
-    std::map<int, bool> m_holdingButtons;
-#endif
     std::vector<float> m_playerFollowFloats;
     cocos2d::CCPoint position;
     float rotation;
