@@ -763,8 +763,7 @@ void RecordLayer::loadSetting(RecordSetting sett, float yPos) {
         speedhackInput->setPosition(ccp(127.5, yPos));
         speedhackInput->m_textField->setAnchorPoint({ 0.5f, 0.5f });
         speedhackInput->ignoreAnchorPointForPosition(true);
-        speedhackInput->m_placeholderLabel->setAnchorPoint({ 0.5f, 0.5f });
-        speedhackInput->m_placeholderLabel->setScale(0.6);
+        speedhackInput->setLabelPlaceholderScale(0.6f);
         speedhackInput->setMaxLabelScale(0.7f);
         speedhackInput->setMouseEnabled(true);
         speedhackInput->setTouchEnabled(true);
@@ -795,8 +794,7 @@ void RecordLayer::loadSetting(RecordSetting sett, float yPos) {
         tpsInput->setPosition(ccp(133.5, yPos));
         tpsInput->m_textField->setAnchorPoint({ 0.5f, 0.5f });
         tpsInput->ignoreAnchorPointForPosition(true);
-        tpsInput->m_placeholderLabel->setAnchorPoint({ 0.5f, 0.5f });
-        tpsInput->m_placeholderLabel->setScale(0.6);
+        tpsInput->setLabelPlaceholderScale(0.6f);
         tpsInput->setMaxLabelScale(0.7f);
         tpsInput->setMouseEnabled(true);
         tpsInput->setTouchEnabled(true);
@@ -827,8 +825,7 @@ void RecordLayer::loadSetting(RecordSetting sett, float yPos) {
         seedInput->setPosition(ccp(109.5, yPos));
         seedInput->m_textField->setAnchorPoint({ 0.5f, 0.5f });
         seedInput->ignoreAnchorPointForPosition(true);
-        seedInput->m_placeholderLabel->setAnchorPoint({ 0.5f, 0.5f });
-        seedInput->m_placeholderLabel->setScale(0.6);
+        seedInput->setLabelPlaceholderScale(0.6f);
         seedInput->setMaxLabelScale(0.7f);
         seedInput->setMouseEnabled(true);
         seedInput->setTouchEnabled(true);
@@ -859,8 +856,7 @@ void RecordLayer::loadSetting(RecordSetting sett, float yPos) {
         respawnInput->setPosition(ccp(127.5, yPos));
         respawnInput->m_textField->setAnchorPoint({ 0.5f, 0.5f });
         respawnInput->ignoreAnchorPointForPosition(true);
-        respawnInput->m_placeholderLabel->setAnchorPoint({ 0.5f, 0.5f });
-        respawnInput->m_placeholderLabel->setScale(0.6);
+        respawnInput->setLabelPlaceholderScale(0.6f);
         respawnInput->setMaxLabelScale(0.7f);
         respawnInput->setMouseEnabled(true);
         respawnInput->setTouchEnabled(true);
@@ -936,7 +932,7 @@ void RecordLayer::updateTPS() {
         tpsInput->setID("");
         tpsBg->setOpacity(75);
         tpsToggle->setEnabled(true);
-        tpsInput->m_placeholderLabel->setOpacity(255);
+        setPlaceholderDim(tpsInput, false);
 
         tpsInput->detachWithIME();
         tpsInput->onClickTrackNode(false);
@@ -952,7 +948,7 @@ void RecordLayer::updateTPS() {
         tpsInput->setID("disabled-input"_spr);
         tpsBg->setOpacity(30);
         tpsToggle->setEnabled(false);
-        tpsInput->m_placeholderLabel->setOpacity(120);
+        setPlaceholderDim(tpsInput, true);
 
         tpsInput->detachWithIME();
         tpsInput->onClickTrackNode(false);

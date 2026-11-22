@@ -402,9 +402,11 @@ void ClickSettingsLayer::onSelectFile(CCObject*) {
 	textFilter.files = { "*.mp3", "*.ogg" };
 	fileOptions.filters.push_back(textFilter);
 
-	file::pick(file::PickMode::OpenFile, { Mod::get()->getResourcesDir(), { textFilter } }).listen([this](Result<std::filesystem::path>* res) {
-		if (res->isOk()) {
-			std::filesystem::path path = res->unwrapOrDefault();
+	m_pickHolder.spawn(
+		file::pick(file::PickMode::OpenFile, { Mod::get()->getResourcesDir(), { textFilter } }),
+		[this](geode::Result<std::optional<std::filesystem::path>> res) {
+		if (res.isOk() && res.unwrap().has_value()) {
+			std::filesystem::path path = *res.unwrap();
 
 			filenameLabel->setString(path.filename().string().c_str());
 

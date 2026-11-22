@@ -144,9 +144,11 @@ void LoadMacroLayer::onImportMacro(CCObject*) {
 	textFilter.files = { "*.gdr", "*.xd", "*.json" };
 	fileOptions.filters.push_back(textFilter);
 
-	file::pick(file::PickMode::OpenFile, { dirs::getGameDir(), { textFilter } }).listen([this](Result<std::filesystem::path>* res) {
-		if (res->isOk()) {
-			std::filesystem::path path = res->unwrapOrDefault();
+	m_pickHolder.spawn(
+		file::pick(file::PickMode::OpenFile, { dirs::getGameDir(), { textFilter } }),
+		[this](geode::Result<std::optional<std::filesystem::path>> res) {
+		if (res.isOk() && res.unwrap().has_value()) {
+			std::filesystem::path path = *res.unwrap();
 
 			auto& g = Global::get();
 			Macro tempMacro;
@@ -699,7 +701,7 @@ void MacroCell::handleLoad() {
 	RecordLayer* newLayer = nullptr;
 
 	if (RecordLayer* layer = typeinfo_cast<RecordLayer*>(menuLayer)) {
-		layer->keyBackClicked();
+		closePopupBack(layer);
 		newLayer = RecordLayer::openMenu(true);
 	}
 

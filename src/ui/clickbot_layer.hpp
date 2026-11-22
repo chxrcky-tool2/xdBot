@@ -10,6 +10,8 @@ class ClickSettingsLayer : public PopupCompat<std::string, geode::Popup*> {
 
 private:
 
+    geode::async::TaskHolder<geode::Result<std::optional<std::filesystem::path>>> m_pickHolder;
+
     ClickSetting settings;
     std::string button;
 

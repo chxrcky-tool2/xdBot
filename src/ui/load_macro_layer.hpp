@@ -41,6 +41,7 @@ public:
 
 class LoadMacroLayer : public PopupCompat<geode::Popup*, geode::Popup*, bool>, public TextInputDelegate {
 public:
+	geode::async::TaskHolder<geode::Result<std::optional<std::filesystem::path>>> m_pickHolder;
 
 	geode::Popup* menuLayer = nullptr;
 	geode::Popup* mergeLayer = nullptr;
