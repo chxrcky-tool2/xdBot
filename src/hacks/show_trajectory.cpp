@@ -320,7 +320,7 @@ class $modify(PauseLayer) {
 
 class $modify(GJBaseGameLayer) {
 
-    void collisionCheckObjects(PlayerObject * p0, gd::vector<GameObject*>*objects, int p2, float p3) {
+    void collisionCheckObjects(PlayerObject * p0, std::vector<GameObject*>*objects, int p2, float p3) {
         if (t.creatingTrajectory) {
             std::vector<GameObject*> disabledObjects;
 
@@ -440,7 +440,7 @@ class $modify(GameObject) {
 
 class $modify(EffectGameObject) {
 
-    void triggerObject(GJBaseGameLayer * p0, int p1, const gd::vector<int>*p2) {
+    void triggerObject(GJBaseGameLayer * p0, int p1, const std::vector<int>*p2) {
         if (!t.creatingTrajectory)
             EffectGameObject::triggerObject(p0, p1, p2);
     }

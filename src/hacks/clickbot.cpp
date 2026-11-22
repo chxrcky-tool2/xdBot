@@ -12,12 +12,12 @@ $execute {
     }
 
     if (!g.mod->setSavedValue("clickbot_defaults4", true)) {
-        std::filesystem::path dir = g.mod->getResourcesDir();
+        std::filesystem::path dir = toStdPath(g.mod->getResourcesDir());
         ClickSetting setts;
 
         for (const auto& str : buttonNames) {
             setts.path = dir / fmt::format("default_{}.mp3", str);
-            matjson::Value data = matjson::Serialize<ClickSetting>::to_json(setts);
+            matjson::Value data = matjson::Serialize<ClickSetting>::toJson(setts);
             g.mod->setSavedValue(str, data);
         }
 
@@ -96,7 +96,7 @@ void Clickbot::playSound(std::string id) {
 
     auto& g = Global::get();
     matjson::Value data = g.mod->getSavedValue<matjson::Value>(id);
-    ClickSetting settings = matjson::Serialize<ClickSetting>::from_json(data);
+    ClickSetting settings = matjson::Serialize<ClickSetting>::fromJson(data).unwrapOrDefault();
 
     if (settings.disabled) return;
 
@@ -141,7 +141,7 @@ void Clickbot::updateSounds() {
 
     for (std::string name : buttonNames) {
         matjson::Value data = Global::get().mod->getSavedValue<matjson::Value>(name);
-        ClickSetting settings = matjson::Serialize<ClickSetting>::from_json(data);
+        ClickSetting settings = matjson::Serialize<ClickSetting>::fromJson(data).unwrapOrDefault();
         if (!std::filesystem::exists(settings.path)) continue;
 
         FMOD::Sound* sound = getSound(name);

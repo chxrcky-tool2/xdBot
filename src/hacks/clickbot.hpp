@@ -13,7 +13,7 @@ struct ClickSetting {
 
 template<>
 struct matjson::Serialize<ClickSetting> {
-    static ClickSetting from_json(matjson::Value const& value) {
+    static geode::Result<ClickSetting> fromJson(matjson::Value const& value) {
         ClickSetting setts;
 
         setts.disabled = value["disabled"].asBool().unwrapOr(true);
@@ -21,10 +21,10 @@ struct matjson::Serialize<ClickSetting> {
         setts.volume = value["volume"].asInt().unwrapOrDefault();
         setts.pitch = static_cast<float>(value["pitch"].asDouble().unwrapOrDefault());
 
-        return setts;
+        return geode::Ok(std::move(setts));
     }
 
-    static matjson::Value to_json(ClickSetting const& sett) {
+    static matjson::Value toJson(ClickSetting const& sett) {
         matjson::Value obj;
 
         obj["disabled"] = sett.disabled;
