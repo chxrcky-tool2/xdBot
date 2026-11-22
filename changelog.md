@@ -1,3 +1,9 @@
+# v2.4.2
+
+* Updated to Geometry Dash 2.2081 and Geode 5.11.2.
+* Removed Render (renderer, render settings, render keybind and ffmpeg settings).
+* Now Android only (Windows code, keybinds dependency and Windows settings removed).
+
 # v2.4.1
 
 * Added Auto Clicker keybind.
