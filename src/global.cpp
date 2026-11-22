@@ -55,7 +55,7 @@ bool Global::hasIncompatibleMods() {
 
 
   if (Mod* mod = Loader::get()->getLoadedMod("tobyadd.gdh_mobile")) {
-    std::filesystem::path configPath = mod->getSaveDir() / "config.json";
+    std::filesystem::path configPath = toStdPath(mod->getSaveDir()) / "config.json";
 	  using namespace nlohmann;
     
     if (std::filesystem::exists(configPath)) {
@@ -298,8 +298,8 @@ $execute{
   auto & g = Global::get();
 
   if (!g.mod->setSavedValue("defaults_set_12", true)) {
-    g.mod->setSettingValue<std::filesystem::path>("macros_folder", g.mod->getSaveDir() / "macros");
-    g.mod->setSettingValue<std::filesystem::path>("autosaves_folder", g.mod->getSaveDir() / "autosaves");
+    g.mod->setSettingValue<asp::fs::Path>("macros_folder", g.mod->getSaveDir() / "macros");
+    g.mod->setSettingValue<asp::fs::Path>("autosaves_folder", g.mod->getSaveDir() / "autosaves");
   }
 
   if (!g.mod->setSavedValue("defaults_set_10", true)) {

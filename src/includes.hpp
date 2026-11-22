@@ -38,6 +38,42 @@ inline void closePopupBack(geode::Popup* p) {
     if (p) static_cast<FLAlertLayer*>(p)->keyBackClicked();
 }
 
+// Geode 6 replaced std::filesystem::path with asp::fs::Path in its API (settings, dirs, file utils, file picker).
+// The mod keeps using std::filesystem internally, so convert at the Geode boundary with these.
+inline std::filesystem::path toStdPath(asp::fs::PathView path) {
+    return std::filesystem::path(path.string());
+}
+
+inline asp::fs::Path toAspPath(std::filesystem::path const& path) {
+    return asp::fs::Path(path.string());
+}
+
+inline std::filesystem::path getPathSetting(char const* id) {
+    return toStdPath(geode::Mod::get()->getSettingValue<asp::fs::Path>(id));
+}
+
+// Geode 6 rewrote geode::TextInput (no more getInputNode()/delegates), so this configures it with the new API.
+// allowedChars: characters the input accepts (empty = anything), maxChars: 0 = unlimited.
+template <class Callback>
+inline void setupTextInput(geode::TextInput* input, std::string allowedChars, size_t maxChars, Callback&& callback) {
+    if (!allowedChars.empty()) input->setFilter(std::move(allowedChars));
+    if (maxChars) input->setMaxCharCount(maxChars);
+    input->setCallback(std::forward<Callback>(callback));
+}
+
+inline void setPlaceholderDim(geode::TextInput* input, bool dim) {
+    if (!input) return;
+    input->setPlaceholderColor(dim ? ccColor4B{ 100, 100, 100, 255 } : ccColor4B{ 255, 255, 255, 255 });
+}
+
+// Enables/disables an input and fully unfocuses it when disabled.
+inline void setInputEnabled(geode::TextInput* input, bool enabled) {
+    if (!input) return;
+    input->setEnabled(enabled);
+    setPlaceholderDim(input, !enabled);
+    if (!enabled) input->unfocus();
+}
+
 inline void setPlaceholderDim(CCTextInputNode* node, bool dim) {
     if (!node) return;
     node->setLabelPlaceholderColor(dim ? ccColor3B{ 100, 100, 100 } : ccColor3B{ 255, 255, 255 });
