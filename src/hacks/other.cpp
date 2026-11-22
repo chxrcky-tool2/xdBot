@@ -23,13 +23,6 @@ class $modify(CCScheduler) {
             return CCScheduler::update(dt);
         }
 
-        if (g.renderer.recording || g.renderer.recordingAudio) {
-            if (g.currentPitch != 1.f)
-                Global::updatePitch(1.f);
-
-            return CCScheduler::update(dt);
-        }
-
         float speedhack = 1.f;
 
         if (g.speedhackEnabled && !g.frameStepper) {
@@ -129,8 +122,6 @@ class $modify(PlayLayer) {
             Global::get().safeMode = true;
         
         if (getActionByTag(16)) {
-            if (Global::get().renderer.recordingAudio) Global::get().renderer.stopAudio();
-            
             if (g.mod->getSavedValue<bool>("respawn_time_enabled")) {
                 stopActionByTag(16);
                 CCSequence* seq = CCSequence::create(CCDelayTime::create(g.mod->getSavedValue<double>("respawn_time")), CCCallFunc::create(this, callfunc_selector(PlayLayer::delayedResetLevel)), nullptr);

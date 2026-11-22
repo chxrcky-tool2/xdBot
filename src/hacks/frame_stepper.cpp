@@ -6,49 +6,6 @@
 #include <Geode/modify/GJBaseGameLayer.hpp>
 #include <Geode/modify/PlayLayer.hpp>
 
-#ifdef GEODE_IS_WINDOWS
-
-class $modify(PauseLayer) {
-
-    void onResume(CCObject * sender) {
-        PauseLayer::onResume(sender);
-
-        if (Global::get().frameStepper) {
-            Global::get().stepFrameDrawMultiple = 4;
-        }
-    }
-
-};
-
-class $modify(CCDirector) {
-
-    void drawScene() {
-        auto& g = Global::get();
-
-        if (!g.frameStepper) return CCDirector::drawScene();
-
-        PlayLayer* pl = PlayLayer::get();
-
-        if (!pl) return CCDirector::drawScene();
-
-        if (pl->m_isPaused || pl->m_player1->m_isDead) return CCDirector::drawScene();
-        if (Global::getCurrentFrame() < 3) return CCDirector::drawScene();
-
-        if (g.stepFrameDraw || g.stepFrameDrawMultiple != 0) {
-            g.stepFrameDraw = false;
-
-            if (g.stepFrameDrawMultiple != 0)
-                g.stepFrameDrawMultiple--;
-
-            CCDirector::drawScene();
-        }
-        else
-            this->getScheduler()->update(1.f / Global::getTPS());
-
-    }
-};
-
-#endif
 
 class $modify(PlayLayer) {
 
@@ -73,7 +30,7 @@ class $modify(GJBaseGameLayer) {
 
         auto& g = Global::get();
 
-        if (!g.renderer.recording && g.frameStepper) {
+        if (g.frameStepper) {
             if (g.stepFrameParticle != 0)
                 g.stepFrameParticle--;
 
@@ -101,7 +58,7 @@ class $modify(CCParticleSystem) {
         auto& g = Global::get();
         if (!PlayLayer::get()) return CCParticleSystem::update(dt);
 
-        if (!g.renderer.recording && g.frameStepper) {
+        if (g.frameStepper) {
             if (g.stepFrameParticle != 0) {
                 CCParticleSystem::update(dt);
             }
