@@ -39,9 +39,9 @@ public:
 	void selectMacro(bool single);
 };
 
-class LoadMacroLayer : public PopupCompat<geode::Popup*, geode::Popup*, bool>, public TextInputDelegate {
+class LoadMacroLayer : public PopupCompat<geode::Popup*, geode::Popup*, bool> {
 public:
-	geode::async::TaskHolder<geode::Result<std::optional<std::filesystem::path>>> m_pickHolder;
+	geode::async::TaskHolder<geode::utils::file::PickResult> m_pickHolder;
 
 	geode::Popup* menuLayer = nullptr;
 	geode::Popup* mergeLayer = nullptr;
@@ -74,10 +74,10 @@ public:
 	static void open(geode::Popup* layer, geode::Popup* layer2, bool autosaves = false);
 
 	void openFolder(CCObject*) {
-		file::openFolder(Mod::get()->getSettingValue<std::filesystem::path>(isAutosaves ? "autosaves_folder" : "macros_folder"));
+		file::openFolder(toAspPath(getPathSetting(isAutosaves ? "autosaves_folder" : "macros_folder")));
 	}
 
-	void textChanged(CCTextInputNode* p) override;
+	void textChanged(std::string const& text);
 
 	void clearSearch(CCObject*);
 

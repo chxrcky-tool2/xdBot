@@ -10,7 +10,7 @@ class ClickSettingsLayer : public PopupCompat<std::string, geode::Popup*> {
 
 private:
 
-    geode::async::TaskHolder<geode::Result<std::optional<std::filesystem::path>>> m_pickHolder;
+    geode::async::TaskHolder<geode::utils::file::PickResult> m_pickHolder;
 
     ClickSetting settings;
     std::string button;
@@ -33,7 +33,7 @@ public:
     static ClickSettingsLayer* create(std::string button, geode::Popup* layer);
 
     void saveSettings() {
-        matjson::Value data = matjson::Serialize<ClickSetting>::to_json(settings);
+        matjson::Value data = matjson::Serialize<ClickSetting>::toJson(settings);
         Mod::get()->setSavedValue(button, data);
         
         Clickbot::updateSounds();

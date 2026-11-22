@@ -11,7 +11,7 @@ struct InputText {
     std::string action;
 };
 
-class MacroEditLayer : public PopupCompat<>, public TextInputDelegate {
+class MacroEditLayer : public PopupCompat<> {
 
 private:
     
@@ -23,7 +23,8 @@ private:
         onClose(nullptr);
     }
 
-    void textChanged(CCTextInputNode* input) override;
+    void onPageInputChanged(std::string const& text);
+    void onFrameInputChanged(std::string const& text);
 
     ~MacroEditLayer() override;
     

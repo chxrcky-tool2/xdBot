@@ -218,9 +218,7 @@ bool MacroEditLayer::setup() {
     menu->addChild(lbl);
 
     pageInput = TextInput::create(36, "0");
-    pageInput->getInputNode()->setAllowedChars("0123456789");
-    pageInput->getInputNode()->setMaxLabelLength(5);
-    pageInput->getInputNode()->setDelegate(this);
+    setupTextInput(pageInput, "0123456789", 5, [this](std::string const& text) { this->onPageInputChanged(text); });
     pageInput->setPosition({23.5, 91});
     pageInput->setScale(0.55f);
     menu->addChild(pageInput);
@@ -243,9 +241,7 @@ bool MacroEditLayer::setup() {
     frameInput = TextInput::create(70, "236");
     frameInput->setPosition({xPos + 91, yPos});
     frameInput->setScale(0.625f);
-    frameInput->getInputNode()->setAllowedChars("0123456789");
-    frameInput->getInputNode()->setMaxLabelLength(8);
-    frameInput->getInputNode()->setDelegate(this);
+    setupTextInput(frameInput, "0123456789", 8, [this](std::string const& text) { this->onFrameInputChanged(text); });
     selectedInputMenu->addChild(frameInput);
 
     spr = CCSprite::createWithSpriteFrameName("edit_leftBtn_001.png");
@@ -514,31 +510,23 @@ InputText MacroEditLayer::getInputText(input input) {
     return ret;
 }
 
-void MacroEditLayer::textChanged(CCTextInputNode* input) {
-    if (!input || !editLayer) return;
+void MacroEditLayer::onPageInputChanged(std::string const& text) {
+    if (!editLayer || text.empty()) return;
 
-    std::string text = input->getString();
+    int page = geode::utils::numFromString<int>(text).unwrapOr(0);
+    if (page <= 0) return;
 
-    if (text == "") return;
+    editLayer->loadPage(page);
+    editLayer->reSelectInput();
+}
 
-    if (input == editLayer->pageInput->getInputNode()) {
-        int page = std::stoi(text);
+void MacroEditLayer::onFrameInputChanged(std::string const& text) {
+    if (!editLayer || text.empty()) return;
 
-        if (page <= 0) return;
+    int frame = geode::utils::numFromString<int>(text).unwrapOr(-1);
+    if (frame < 0) return;
 
-        editLayer->loadPage(page);
-        editLayer->reSelectInput();
-
-        return;
-    }
-
-    if (input == editLayer->frameInput->getInputNode()) {
-        int frame = std::stoi(text);
-
-        editLayer->changeSelectedInputFrame(frame, false);
-
-        return;
-    }
+    editLayer->changeSelectedInputFrame(frame, false);
 }
 
 void MacroEditLayer::updatePageInputs(int page) {

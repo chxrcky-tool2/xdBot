@@ -1,6 +1,6 @@
 #include "../includes.hpp"
 
-class AutoSaveLayer : public PopupCompat<>, public TextInputDelegate {
+class AutoSaveLayer : public PopupCompat<> {
 
 private:
 
@@ -13,7 +13,7 @@ private:
 
 	STATIC_CREATE(AutoSaveLayer, 250, 190)
 
-	void textChanged(CCTextInputNode*) override {
+	void textChanged(CCTextInputNode*) {
 		std::string str = intervalInput->getString();
 		float mins = geode::utils::numFromString<float>(str).unwrapOr(0.f);
 
@@ -60,9 +60,7 @@ private:
 		intervalInput->setPosition({169, 130});
 		intervalInput->setScale(0.675f);
 		intervalInput->setString(Mod::get()->getSavedValue<std::string>("autosave_interval").c_str());
-		intervalInput->getInputNode()->setDelegate(this);
-		intervalInput->getInputNode()->setAllowedChars("0123456789.");
-		intervalInput->getInputNode()->setMaxLabelLength(4);
+		setupTextInput(intervalInput, "0123456789.", 4, [this](std::string const&) { this->textChanged(nullptr); });
 		m_mainLayer->addChild(intervalInput);
 
 		intervalToggle = CCMenuItemToggler::create(
@@ -127,13 +125,7 @@ private:
 		intervalLbl->setOpacity(g.autosaveIntervalEnabled ? 255 : 100);
 		intervalLbl2->setOpacity(g.autosaveIntervalEnabled ? 255 : 100);
 		intervalInput->getBGSprite()->setOpacity(g.autosaveIntervalEnabled ? 90 : 30);
-		intervalInput->setEnabled(g.autosaveIntervalEnabled);
-		setPlaceholderDim(intervalInput->getInputNode(), !(g.autosaveIntervalEnabled));
-		if (!g.autosaveIntervalEnabled) {
-			intervalInput->getInputNode()->detachWithIME();
-			intervalInput->getInputNode()->onClickTrackNode(false);
-			intervalInput->getInputNode()->m_cursor->setVisible(false);
-		}
+		setInputEnabled(intervalInput, g.autosaveIntervalEnabled);
 
 	}
 

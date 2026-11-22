@@ -42,9 +42,10 @@ protected:
 
         CCSprite* sprite = CCSprite::createWithSpriteFrameName("GJ_playBtn2_001.png");
         sprite->setScale(0.325f);
-        CCMenuItemSpriteExtra* btn = CCMenuItemSpriteExtra::create(
-            sprite, this, menu_selector(MyButtonSettingNodeV3::onButton)
-        );
+        // Geode 6: the setting node's button menu is a plain CCNode, so use geode::Button instead of CCMenuItemSpriteExtra
+        geode::Button* btn = geode::Button::createWithNode(sprite, [this](geode::Button*) {
+            this->onButton(nullptr);
+        });
         getButtonMenu()->addChildAtPosition(btn, Anchor::Center);
         getButtonMenu()->updateLayout();
 

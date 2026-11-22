@@ -26,17 +26,17 @@ class $modify(CCMenu) {
 };
 
 void LoadMacroLayer::open(geode::Popup* layer, geode::Popup* layer2, bool autosaves) {
-	std::filesystem::path path = Mod::get()->getSettingValue<std::filesystem::path>("macros_folder");
+	std::filesystem::path path = getPathSetting("macros_folder");
 
 	if (!std::filesystem::exists(path)) {
-		if (utils::file::createDirectoryAll(path).isErr())
+		if (utils::file::createDirectoryAll(toAspPath(path)).isErr())
 			return FLAlertLayer::create("Error", "There was an error getting the folder. ID: 6", "Ok")->show();
 	}
 
-	path = Mod::get()->getSettingValue<std::filesystem::path>("autosaves_folder");
+	path = getPathSetting("autosaves_folder");
 
 	if (!std::filesystem::exists(path)) {
-		if (utils::file::createDirectoryAll(path).isErr())
+		if (utils::file::createDirectoryAll(toAspPath(path)).isErr())
 			return FLAlertLayer::create("Error", "There was an error getting the folder. ID: 61", "Ok")->show();
 	}
 
@@ -45,8 +45,8 @@ void LoadMacroLayer::open(geode::Popup* layer, geode::Popup* layer2, bool autosa
 	layerReal->show();
 }
 
-void LoadMacroLayer::textChanged(CCTextInputNode* node) {
-	search = Utils::toLower(node->getString());
+void LoadMacroLayer::textChanged(std::string const& text) {
+	search = Utils::toLower(text);
 	if (search != "") {
 		searchOff->setVisible(true);
 		searchOff->setOpacity(184);
@@ -146,9 +146,9 @@ void LoadMacroLayer::onImportMacro(CCObject*) {
 
 	m_pickHolder.spawn(
 		file::pick(file::PickMode::OpenFile, { dirs::getGameDir(), { textFilter } }),
-		[this](geode::Result<std::optional<std::filesystem::path>> res) {
+		[this](file::PickResult res) {
 		if (res.isOk() && res.unwrap().has_value()) {
-			std::filesystem::path path = *res.unwrap();
+			std::filesystem::path path = toStdPath(*res.unwrap());
 
 			auto& g = Global::get();
 			Macro tempMacro;
@@ -183,7 +183,7 @@ void LoadMacroLayer::onImportMacro(CCObject*) {
 
 			std::string name = path.filename().string().substr(0, path.filename().string().find_last_of('.'));
 
-			std::filesystem::path newPath = Mod::get()->getSettingValue<std::filesystem::path>("macros_folder") / name;
+			std::filesystem::path newPath = getPathSetting("macros_folder") / name;
 
 			std::string pathString = newPath.string();
 
@@ -233,7 +233,7 @@ bool LoadMacroLayer::setup(geode::Popup* layer, geode::Popup* layer2, bool autos
 
 	setTitle(isMerge ? "Merge Macro" : "Load Macro");
 	m_title->setPositionY(m_title->getPositionY() + 5);
-    m_closeBtn->getNormalImage()->setScale(0.6f);
+    m_closeBtn->getDisplayNode()->setScale(0.6f);
 
 	cocos2d::CCPoint offset = (CCDirector::sharedDirector()->getWinSize() - m_mainLayer->getContentSize()) / 2;
     m_mainLayer->setPosition(m_mainLayer->getPosition() - offset);
@@ -255,7 +255,7 @@ bool LoadMacroLayer::setup(geode::Popup* layer, geode::Popup* layer2, bool autos
 
 		searchInput = TextInput::create(235, "Search Macro", "bigFont.fnt");
 		searchInput->setPositionY(100);
-		searchInput->setDelegate(this);
+		searchInput->setCallback([this](std::string const& text) { this->textChanged(text); });
 		menu->addChild(searchInput);
 
 		CCSprite* emptyBtn = CCSprite::createWithSpriteFrameName("GJ_plainBtn_001.png");
@@ -411,8 +411,11 @@ void LoadMacroLayer::updateSort(CCObject*) {
 void LoadMacroLayer::addList(bool refresh, float prevScroll) {
 	cocos2d::CCSize winSize = cocos2d::CCDirector::sharedDirector()->getWinSize();
 
-	std::filesystem::path path = Mod::get()->getSettingValue<std::filesystem::path>(isAutosaves ? "autosaves_folder" : "macros_folder");
-	std::vector<std::filesystem::path> macros = file::readDirectory(path).unwrapOrDefault();
+	std::filesystem::path path = getPathSetting(isAutosaves ? "autosaves_folder" : "macros_folder");
+	std::vector<std::filesystem::path> macros;
+	if (auto dirRes = file::readDirectory(toAspPath(path)); dirRes.isOk()) {
+		for (auto const& entry : dirRes.unwrap()) macros.push_back(toStdPath(entry));
+	}
 
 	CCArray* cells = CCArray::create();
 
