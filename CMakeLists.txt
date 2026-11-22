@@ -26,7 +26,7 @@ add_library(${PROJECT_NAME} SHARED
     src/ui/macro_editor.cpp
     src/ui/button_edit_layer.cpp
     src/ui/game_ui.cpp
-    src/ui/record_layer.cpp
+    src/ui/xd_menu.cpp
     src/ui/load_macro_layer.cpp
     src/ui/clickbot_layer.cpp
     src/ui/button_setting.cpp
@@ -46,3 +46,8 @@ add_subdirectory($ENV{GEODE_SDK} ${CMAKE_CURRENT_BINARY_DIR}/geode)
 
 setup_geode_mod(${PROJECT_NAME})
 target_compile_options(${PROJECT_NAME} PRIVATE -ferror-limit=0)
+
+# ImGui overlay (replaces the old cocos2d menu).
+# imgui-cocos is built as a static lib and linked into the mod. Pin <commit> once you've picked a known-good one.
+CPMAddPackage("gh:matcool/gd-imgui-cocos#main")
+target_link_libraries(${PROJECT_NAME} imgui-cocos)
