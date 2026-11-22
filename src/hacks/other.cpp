@@ -161,7 +161,7 @@ class $modify(PlayLayer) {
 
 };
 
-class $modify(EndLevelLayer) {
+class $modify(XDEndLevelLayer, EndLevelLayer) {
 
     void onXDMenu(CCObject*) {
         XDMenu::toggle();
@@ -180,7 +180,7 @@ class $modify(EndLevelLayer) {
         	CCMenuItemSpriteExtra* btn = CCMenuItemSpriteExtra::create(
                 sprite,
 			    this,
-			    menu_selector(EndLevelLayer::onXDMenu)
+			    menu_selector(XDEndLevelLayer::onXDMenu)
             );
 			btn->setPosition({160, -99});
 
