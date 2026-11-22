@@ -141,7 +141,7 @@ void LoadMacroLayer::onImportMacro(CCObject*) {
 	file::FilePickOptions::Filter textFilter;
 	file::FilePickOptions fileOptions;
 	textFilter.description = "Macro Files";
-	textFilter.files = { "*.gdr", "*.xd", "*.json" };
+	textFilter.files = { "*.xd", "*.gdr", "*.json" };
 	fileOptions.filters.push_back(textFilter);
 
 	m_pickHolder.spawn(
@@ -150,44 +150,17 @@ void LoadMacroLayer::onImportMacro(CCObject*) {
 		if (res.isOk() && res.unwrap().has_value()) {
 			std::filesystem::path path = toStdPath(*res.unwrap());
 
-			auto& g = Global::get();
-			Macro tempMacro;
+			bool legacy = false;
+			Macro tempMacro = Macro::importFile(path, &legacy);
 
-			if (path.extension() == ".xd") {
-				tempMacro = Macro::XDtoGDR(path);
-
-				if (tempMacro.description == "fail")
-					return FLAlertLayer::create("Error", "There was an error importing this macro. ID: 46", "Ok")->show();
-
-			}
-			else {
-
-				std::ifstream f(path, std::ios::binary);
-
-				f.seekg(0, std::ios::end);
-				size_t fileSize = f.tellg();
-				f.seekg(0, std::ios::beg);
-
-				std::vector<std::uint8_t> macroData(fileSize);
-
-				f.read(reinterpret_cast<char*>(macroData.data()), fileSize);
-				f.close();
-
-				tempMacro = Macro::importData(macroData);
-
-			}
-
-			bool xdMacro = path.extension() == ".xd";
-
-			int iterations = 0;
+			if (tempMacro.description == "fail")
+				return FLAlertLayer::create("Error", "There was an error importing this macro. ID: 46", "Ok")->show();
 
 			std::string name = path.filename().string().substr(0, path.filename().string().find_last_of('.'));
+			std::string pathString = (getPathSetting("macros_folder") / name).string();
 
-			std::filesystem::path newPath = getPathSetting("macros_folder") / name;
-
-			std::string pathString = newPath.string();
-
-			while (std::filesystem::exists(pathString + ".gdr.json")) {
+			int iterations = 0;
+			while (std::filesystem::exists(pathString + ".xd")) {
 				iterations++;
 
 				if (iterations > 1) {
@@ -198,18 +171,18 @@ void LoadMacroLayer::onImportMacro(CCObject*) {
 				pathString += fmt::format(" ({})", std::to_string(iterations));
 			}
 
-			pathString += ".gdr.json";
+			pathString += ".xd";
 
 			std::ofstream f2(pathString, std::ios::binary);
-			auto data = tempMacro.exportData(true);
+			auto data = tempMacro.exportData(false);
 
 			f2.write(reinterpret_cast<const char*>(data.data()), data.size());
 			f2.close();
 
 			this->reloadList(0);
 
-			if (xdMacro)
-				FLAlertLayer::create("Warning", "<cl>.xd</c> extension macros may not function correctly in this version.", "Ok")->show();
+			if (legacy)
+				FLAlertLayer::create("Warning", "Old <cl>.xd</c> macros may not function correctly in this version.", "Ok")->show();
 
 			Notification::create("Macro Imported", NotificationIcon::Success)->show();
 		}
@@ -642,35 +615,14 @@ bool MacroCell::init(std::filesystem::path path, std::string name, std::time_t d
 void MacroCell::handleLoad() {
 	auto& g = Global::get();
 	
-	Macro newMacro;
-	Macro oldMacro = g.macro;
+	bool legacy = false;
+	Macro newMacro = Macro::importFile(path, &legacy);
 
-	if (path.extension() == ".xd") {
-		if (!Macro::loadXDFile(path)) {
-			if (!isMerge)
-				return FLAlertLayer::create("Error", "There was an error loading this macro. ID: 45", "Ok")->show();
-			else
-				return;
-		}
-
-		newMacro = g.macro;
-
-		if (isMerge)
-			g.macro = oldMacro;
-	}
-	else {
-		std::ifstream f(path.string(), std::ios::binary);
-
-		f.seekg(0, std::ios::end);
-		size_t fileSize = f.tellg();
-		f.seekg(0, std::ios::beg);
-
-		std::vector<std::uint8_t> macroData(fileSize);
-
-		f.read(reinterpret_cast<char*>(macroData.data()), fileSize);
-		f.close();
-
-		newMacro = Macro::importData(macroData);
+	if (newMacro.description == "fail") {
+		if (!isMerge)
+			return FLAlertLayer::create("Error", "There was an error loading this macro. ID: 45", "Ok")->show();
+		else
+			return;
 	}
 
 	if (isMerge) {
@@ -701,32 +653,13 @@ void MacroCell::handleLoad() {
 
 	loadLayer->keyBackClicked();
 
-	RecordLayer* newLayer = nullptr;
-
-	if (RecordLayer* layer = typeinfo_cast<RecordLayer*>(menuLayer)) {
-		closePopupBack(layer);
-		newLayer = RecordLayer::openMenu(true);
-	}
-
-	if (!newLayer) newLayer = g.layer != nullptr ? static_cast<RecordLayer*>(g.layer) : nullptr;
-	if (newLayer) newLayer->updateTPS();
-
 	if (!PlayLayer::get() && g.state != state::playing)
 		Macro::togglePlaying();
-	else if (g.state == state::recording) {
-		if (newLayer) {
-			newLayer->recording->toggle(Global::get().state != state::recording);
-			newLayer->toggleRecording(nullptr);
-		}
-		else {
-			RecordLayer* layer = RecordLayer::create();
-			layer->toggleRecording(nullptr);
-			layer->onClose(nullptr);
-		}
-	}
+	else if (g.state == state::recording)
+		Macro::toggleRecording();
 
-	if (path.extension() == ".xd")
-		FLAlertLayer::create("Warning", "<cl>.xd</c> extension macros may not function correctly in this version.", "Ok")->show();
+	if (legacy)
+		FLAlertLayer::create("Warning", "Old <cl>.xd</c> macros may not function correctly in this version.", "Ok")->show();
 
 	Notification::create("Macro Loaded", NotificationIcon::Success)->show();
 }

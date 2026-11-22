@@ -2,7 +2,7 @@
 
 #include "../includes.hpp"
 #include "../hacks/clickbot.hpp"
-#include "record_layer.hpp"
+#include "xd_menu.hpp"
 
 const std::unordered_map<int, std::string> buttons = { {1, ""} };
 
@@ -104,6 +104,12 @@ public:
     }
 
     void updateLabels();
+
+    void onSettingToggle(CCObject* obj) {
+        auto* toggle = typeinfo_cast<CCMenuItemToggler*>(obj);
+        if (!toggle) return;
+        XDMenu::applySetting(toggle->getID(), !toggle->isToggled());
+    }
 
     void updateVolume(CCObject*) {
         int volume = static_cast<int>(volumeSlider->getThumb()->getValue() * 300.f);

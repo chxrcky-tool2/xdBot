@@ -1,5 +1,5 @@
 #include "../includes.hpp"
-#include "record_layer.hpp"
+#include "xd_menu.hpp"
 
 #include <Geode/loader/SettingV3.hpp>
 #include <Geode/loader/Mod.hpp>
@@ -63,7 +63,7 @@ protected:
         if (FLAlertLayer* layer = typeinfo_cast<FLAlertLayer*>(children->lastObject()))
             layer->keyBackClicked();
 
-        RecordLayer::openMenu();
+        XDMenu::open();
     }
 
     void onCommit() override {}

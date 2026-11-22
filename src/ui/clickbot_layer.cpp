@@ -254,7 +254,7 @@ bool ClickbotLayer::setup() {
 	CCSprite* spriteOn = CCSprite::createWithSpriteFrameName("GJ_checkOn_001.png");
 	CCSprite* spriteOff = CCSprite::createWithSpriteFrameName("GJ_checkOff_001.png");
 
-	CCMenuItemToggler* toggle = CCMenuItemToggler::create(spriteOff, spriteOn, this, menu_selector(RecordLayer::toggleSetting));
+	CCMenuItemToggler* toggle = CCMenuItemToggler::create(spriteOff, spriteOn, this, menu_selector(ClickbotLayer::onSettingToggle));
 	toggle->setScale(0.55f);
 	toggle->setPosition(ccp(73, -40));
 	toggle->toggle(Mod::get()->getSavedValue<bool>("clickbot_playing_only"));
@@ -267,7 +267,7 @@ bool ClickbotLayer::setup() {
 	lbl->setScale(0.3f);
 	menu->addChild(lbl);
 
-	toggle = CCMenuItemToggler::create(spriteOff, spriteOn, this, menu_selector(RecordLayer::toggleSetting));
+	toggle = CCMenuItemToggler::create(spriteOff, spriteOn, this, menu_selector(ClickbotLayer::onSettingToggle));
 	toggle->setScale(0.55f);
 	toggle->setPosition(ccp(73, -70));
 	toggle->toggle(Mod::get()->getSavedValue<bool>("clickbot_holding_only"));

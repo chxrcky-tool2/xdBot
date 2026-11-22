@@ -1,5 +1,6 @@
 #include "macro_editor.hpp"
-#include "record_layer.hpp"
+#include "xd_menu.hpp"
+#include "load_macro_layer.hpp"
 
 #include <Geode/modify/CCEGLView.hpp>
 #include <Geode/modify/FLAlertLayer.hpp>
@@ -852,15 +853,6 @@ void MacroEditLayer::onSave(CCObject*) {
 
             onClose(nullptr);
 
-            CCArray* children = CCDirector::sharedDirector()->getRunningScene()->getChildren();
-            for (CCObject* child : CCArrayExt<CCObject*>(children)) {
-                if (RecordLayer* layer = typeinfo_cast<RecordLayer*>(child)) {
-                    closePopupBack(layer);
-                    break;
-                }
-            }
-
-            RecordLayer::openMenu(true);
             MacroEditLayer::open(true);
 
             Loader::get()->queueInMainThread([] {
@@ -917,25 +909,8 @@ void MacroEditLayer::onClear(CCObject*) {
 }
 
 void MacroEditLayer::onMerge(CCObject*) {
-    geode::Popup* layer = nullptr;
-    if (Global::get().layer)
-        layer = typeinfo_cast<geode::Popup*>(Global::get().layer);
-    else {
-        CCArray* children = CCDirector::sharedDirector()->getRunningScene()->getChildren();
-        for (CCObject* child : CCArrayExt<CCObject*>(children)) {
-            if (typeinfo_cast<RecordLayer*>(child)) {
-                layer = typeinfo_cast<geode::Popup*>(child);
-                break;
-            }
-        }
-    }
-
-    if (!layer) {
-        onClose(nullptr);
-        return;
-    }
-
-    LoadMacroLayer::open(layer, this, false);
+    // The merge picker is the only place the old cocos load list is still used.
+    LoadMacroLayer::open(nullptr, this, false);
 }
 
 void MacroEditLayer::mergeMacro(std::vector<input> mergeInputs, bool players[2], bool overwrite) {
