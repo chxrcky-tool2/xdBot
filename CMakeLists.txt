@@ -49,7 +49,7 @@ target_compile_options(${PROJECT_NAME} PRIVATE -ferror-limit=0)
 
 # ImGui overlay (replaces the old cocos2d menu).
 # imgui-cocos is built as a static lib and linked into the mod. Pin <commit> once you've picked a known-good one.
-CPMAddPackage("gh:matcool/gd-imgui-cocos#main")
+CPMAddPackage("gh:matcool/gd-imgui-cocos#geode")
 target_link_libraries(${PROJECT_NAME} imgui-cocos)
 
 # --- Patch imgui-cocos for Geode 6 cocos delegate signatures ---------------------------------
