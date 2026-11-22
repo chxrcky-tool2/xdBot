@@ -51,3 +51,37 @@ target_compile_options(${PROJECT_NAME} PRIVATE -ferror-limit=0)
 # imgui-cocos is built as a static lib and linked into the mod. Pin <commit> once you've picked a known-good one.
 CPMAddPackage("gh:matcool/gd-imgui-cocos#main")
 target_link_libraries(${PROJECT_NAME} imgui-cocos)
+
+# --- Patch imgui-cocos for Geode 6 cocos delegate signatures ---------------------------------
+# Geode 6 changed: keyDown/keyUp take (key, double), insertText takes (text, len, key),
+# scrollWheel returns bool. Wrap the old implementations so the overrides match.
+set(_ic_dir "${gd-imgui-cocos_SOURCE_DIR}")
+if (NOT _ic_dir)
+    set(_ic_dir "${imgui-cocos_SOURCE_DIR}")
+endif()
+file(GLOB_RECURSE _ic_files "${_ic_dir}/*.hpp" "${_ic_dir}/*.cpp")
+foreach(_f ${_ic_files})
+    file(READ "${_f}" _c)
+    if (_c MATCHES "enumKeyCodes key\\) override" OR _c MATCHES "scrollWheel" OR _c MATCHES "insertText")
+        if (NOT _c MATCHES "XD_PATCHED")
+            set(_n "${_c}")
+            # header declarations -> inline wrappers calling *Impl
+            string(REGEX REPLACE "void keyUp\\(cocos2d::enumKeyCodes key\\) override;"
+                "void keyUp(cocos2d::enumKeyCodes key, double) override { keyUpImpl(key); } void keyUpImpl(cocos2d::enumKeyCodes key); /*XD_PATCHED*/" _n "${_n}")
+            string(REGEX REPLACE "void keyDown\\(cocos2d::enumKeyCodes key\\) override;"
+                "void keyDown(cocos2d::enumKeyCodes key, double) override { keyDownImpl(key); } void keyDownImpl(cocos2d::enumKeyCodes key); /*XD_PATCHED*/" _n "${_n}")
+            string(REGEX REPLACE "void insertText\\(const char\\* text, int len\\) override;"
+                "void insertText(const char* text, int len, cocos2d::enumKeyCodes) override { insertTextImpl(text, len); } void insertTextImpl(const char* text, int len); /*XD_PATCHED*/" _n "${_n}")
+            string(REGEX REPLACE "void scrollWheel\\(float dy, float dx\\) override;"
+                "bool scrollWheel(float dy, float dx) override { scrollWheelImpl(dy, dx); return false; } void scrollWheelImpl(float dy, float dx); /*XD_PATCHED*/" _n "${_n}")
+            # cpp definitions -> *Impl
+            string(REGEX REPLACE "::keyUp\\(cocos2d::enumKeyCodes key\\)" "::keyUpImpl(cocos2d::enumKeyCodes key)" _n "${_n}")
+            string(REGEX REPLACE "::keyDown\\(cocos2d::enumKeyCodes key\\)" "::keyDownImpl(cocos2d::enumKeyCodes key)" _n "${_n}")
+            string(REGEX REPLACE "::insertText\\(const char\\* text, int len\\)" "::insertTextImpl(const char* text, int len)" _n "${_n}")
+            string(REGEX REPLACE "void ([A-Za-z_]+)::scrollWheel\\(float dy, float dx\\)" "void \\1::scrollWheelImpl(float dy, float dx)" _n "${_n}")
+            if (NOT _n STREQUAL _c)
+                file(WRITE "${_f}" "${_n}")
+            endif()
+        endif()
+    endif()
+endforeach()
