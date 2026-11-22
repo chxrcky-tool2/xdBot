@@ -1,7 +1,7 @@
 #include "../includes.hpp"
 #include "../hacks/show_trajectory.hpp"
 
-class TrajectorySettingsLayer : public PopupCompat<>, public TextInputDelegate {
+class TrajectorySettingsLayer : public PopupCompat<> {
 
 public:
 
@@ -55,8 +55,7 @@ private:
 		input = TextInput::create(50.f, "0");
 		input->setPosition({68, 56});
 		input->setScale(0.65f);
-		input->getInputNode()->setAllowedChars("0123456789");
-		input->getInputNode()->setDelegate(this);
+		setupTextInput(input, "0123456789", 0, [this](std::string const&) { this->textChanged(nullptr); });
 		input->setString(Mod::get()->getSavedValue<std::string>("trajectory_length").c_str());
 		m_mainLayer->addChild(input);
 
@@ -134,7 +133,7 @@ private:
 		Mod::get()->setSavedValue("trajectory_color2", ShowTrajectory::ccc3BFromccc4F(t.color2));
 	}
 
-	void textChanged(CCTextInputNode*) override {
+	void textChanged(CCTextInputNode*) {
 		std::string str = input->getString();
 		int length = geode::utils::numFromString<int>(str).unwrapOr(0);
 

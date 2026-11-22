@@ -422,7 +422,7 @@ void RecordLayer::openKeybinds(CCObject*) {
 }
 
 void RecordLayer::onAutosaves(CCObject*) {
-    std::filesystem::path path = Mod::get()->getSettingValue<std::filesystem::path>("autosaves_folder");
+    std::filesystem::path path = getPathSetting("autosaves_folder");
 
     if (std::filesystem::exists(path))
         LoadMacroLayer::open(static_cast<geode::Popup*>(this), nullptr, true);
@@ -456,7 +456,7 @@ bool RecordLayer::setup() {
     m_bgSprite->setPosition(m_bgSprite->getPosition() + offset);
 
     m_closeBtn->setPosition(m_closeBtn->getPosition() + ccp(-6.75, 6.75));
-    m_closeBtn->getNormalImage()->setScale(0.575f);
+    m_closeBtn->getDisplayNode()->setScale(0.575f);
 
     menu = CCMenu::create();
     m_mainLayer->addChild(menu);

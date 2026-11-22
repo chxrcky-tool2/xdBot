@@ -76,10 +76,10 @@ public:
         if (Global::get().macro.inputs.empty())
             return FLAlertLayer::create("Save Macro", "You can't save an <cl>empty</c> macro.", "Ok")->show();
 
-        std::filesystem::path path = Mod::get()->getSettingValue<std::filesystem::path>("macros_folder");
+        std::filesystem::path path = getPathSetting("macros_folder");
 
         if (!std::filesystem::exists(path)) {
-            if (!utils::file::createDirectoryAll(path).isOk())
+            if (!utils::file::createDirectoryAll(toAspPath(path)).isOk())
                 return FLAlertLayer::create("Error", ("There was an error getting the folder \"" + path.string() + "\". ID: 10").c_str(), "Ok")->show();
         }
 
@@ -93,7 +93,7 @@ public:
         if (macroName == "")
             return FLAlertLayer::create("Save Macro", "Give a <cl>name</c> to the macro.", "Ok")->show();
 
-        std::filesystem::path path = Mod::get()->getSettingValue<std::filesystem::path>("macros_folder") / macroName;
+        std::filesystem::path path = getPathSetting("macros_folder") / macroName;
         std::string author = authorInput->getString();
         std::string desc = descInput->getString();
 
