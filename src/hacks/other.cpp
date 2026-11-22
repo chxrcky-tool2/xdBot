@@ -1,5 +1,5 @@
 #include "../includes.hpp"
-#include "../ui/record_layer.hpp"
+#include "../ui/xd_menu.hpp"
 
 #include <Geode/modify/PlayerObject.hpp>
 #include <Geode/modify/PlayLayer.hpp>
@@ -162,7 +162,11 @@ class $modify(PlayLayer) {
 };
 
 class $modify(EndLevelLayer) {
-    
+
+    void onXDMenu(CCObject*) {
+        XDMenu::toggle();
+    }
+
     void customSetup() {
         EndLevelLayer::customSetup();
         auto& g = Global::get();
@@ -176,7 +180,7 @@ class $modify(EndLevelLayer) {
         	CCMenuItemSpriteExtra* btn = CCMenuItemSpriteExtra::create(
                 sprite,
 			    this,
-			    menu_selector(RecordLayer::openMenu2)
+			    menu_selector(EndLevelLayer::onXDMenu)
             );
 			btn->setPosition({160, -99});
 
@@ -189,10 +193,7 @@ class $modify(EndLevelLayer) {
         	menu->addChild(btn);
 		}
 
-        if (g.layer) {
-            static_cast<RecordLayer*>(g.layer)->cursorWasHidden = false;
-            static_cast<RecordLayer*>(g.layer)->onClose(nullptr);
-        }
+        XDMenu::close();
 
         if (!g.safeMode) return;
 
@@ -254,30 +255,4 @@ class $modify(EffectGameObject) {
             Global::get().safeMode = true;
 	}
 
-};
-
-class $modify(GameLevelOptionsLayer) {
-
-    static GameLevelOptionsLayer* create(GJGameLevel* level) {
-        GameLevelOptionsLayer* ret = GameLevelOptionsLayer::create(level);
-
-        if (!Mod::get()->getSettingValue<bool>("level_settings_button")) return ret;
-
-        CCSprite* sprite = CCSprite::createWithSpriteFrameName("GJ_playBtn2_001.png");
-		sprite->setScale(0.350f);
-            
-        CCMenuItemSpriteExtra* btn = CCMenuItemSpriteExtra::create(
-            sprite,
-		    ret,
-		    menu_selector(RecordLayer::openMenu2)
-        );
-		btn->setPosition({-174, -114});
-
-        if (CCLayer* layer = ret->getChildByType<CCLayer>(0))
-            if (CCMenu* menu = layer->getChildByType<CCMenu>(1))
-                menu->addChild(btn);
-
-        return ret;
-    }
-    
 };
