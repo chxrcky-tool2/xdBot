@@ -5,7 +5,6 @@ std::string Utils::narrow(const wchar_t* str) {
         return "";
     }
 
-#ifdef GEODE_IS_ANDROID
     std::string result;
     size_t len = wcslen(str);
     
@@ -24,27 +23,9 @@ std::string Utils::narrow(const wchar_t* str) {
 
     return result;
 
-#else
-    int size = WideCharToMultiByte(CP_UTF8, 0, str, -1, nullptr, 0, nullptr, nullptr);
-    if (size <= 0) {
-        return "";
-    }
-
-    auto buffer = new char[size];
-    if (!buffer) {
-        return "";
-    }
-
-    WideCharToMultiByte(CP_UTF8, 0, str, -1, buffer, size, nullptr, nullptr);
-    std::string result(buffer, size_t(size) - 1);
-    delete[] buffer;
-
-    return result;
-#endif
 }
 
 std::wstring Utils::widen(const char* str) {
-#ifdef GEODE_IS_ANDROID
 
     std::wstring result;
     result.reserve(strlen(str));
@@ -55,32 +36,6 @@ std::wstring Utils::widen(const char* str) {
 
     return result;
 
-#else
-
-    if (str == nullptr) {
-        return L"Widen Error";
-    }
-
-    int size = MultiByteToWideChar(CP_UTF8, 0, str, -1, nullptr, 0);
-    if (size <= 0) {
-        return L"Widen Error";
-    }
-
-    auto buffer = new wchar_t[size];
-    if (!buffer) {
-        return L"Widen Error";
-    }
-
-    if (MultiByteToWideChar(CP_UTF8, 0, str, -1, buffer, size) <= 0) {
-        delete[] buffer;
-        return L"Widen Error";
-    }
-
-    std::wstring result(buffer, size_t(size) - 1);
-    delete[] buffer;
-    return result;
-
-#endif
 }
 
 std::string Utils::toLower(std::string str) {
@@ -89,35 +44,6 @@ std::string Utils::toLower(std::string str) {
 }
 
 std::time_t Utils::getFileCreationTime(const std::filesystem::path& path) {
-#ifdef GEODE_IS_WINDOWS
-    HANDLE hFile = CreateFileW(
-        path.wstring().c_str(),
-        GENERIC_READ,
-        FILE_SHARE_READ,
-        NULL,
-        OPEN_EXISTING,
-        FILE_ATTRIBUTE_NORMAL,
-        NULL
-    );
-
-    if (hFile == INVALID_HANDLE_VALUE) {
-        return 0;
-    }
-
-    FILETIME creationTime, lastAccessTime, lastWriteTime;
-    if (!GetFileTime(hFile, &creationTime, &lastAccessTime, &lastWriteTime)) {
-        CloseHandle(hFile);
-        return 0;
-    }
-
-    CloseHandle(hFile);
-
-    ULARGE_INTEGER ull;
-    ull.LowPart = creationTime.dwLowDateTime;
-    ull.HighPart = creationTime.dwHighDateTime;
-
-    return ull.QuadPart / 10000000ULL - 11644473600ULL;
-#endif
     std::time_t ret;
     return ret;
 }
