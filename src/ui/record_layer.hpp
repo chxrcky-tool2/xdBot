@@ -4,7 +4,6 @@
 #include "../includes.hpp"
 
 #include "load_macro_layer.hpp"
-#include "render_settings_layer.hpp"
 #include "save_macro_layer.hpp"
 #include "macro_info_layer.hpp"
 
@@ -31,7 +30,7 @@ const float ySettingPositions[6]{
 	76.5f, 47.5f, 18.5f, -11.5f, -40.5f, -69.5f
 };
 
-class RecordLayer : public geode::Popup<>, public TextInputDelegate {
+class RecordLayer : public PopupCompat<>, public TextInputDelegate {
 public:
 	CCMenuItemToggler* recording = nullptr;
 	CCMenuItemToggler* playing = nullptr;
@@ -39,7 +38,6 @@ public:
 	CCMenuItemToggler* trajectoryToggle = nullptr;
 	CCMenuItemToggler* noclipToggle = nullptr;
 	CCMenuItemToggler* frameStepperToggle = nullptr;
-	CCMenuItemToggler* renderToggle = nullptr;
 	CCMenuItemToggler* tpsToggle = nullptr;
 
 	CCLabelBMFont* actionsLabel = nullptr;
@@ -52,11 +50,6 @@ public:
 	CCMenuItemSpriteExtra* FPSLeft = nullptr;
 	CCMenuItemSpriteExtra* FPSRight = nullptr;
 
-	CCTextInputNode* widthInput = nullptr;
-	CCTextInputNode* heightInput = nullptr;
-	CCTextInputNode* bitrateInput = nullptr;
-	CCTextInputNode* fpsInput = nullptr;
-	CCTextInputNode* codecInput = nullptr;
 	CCTextInputNode* seedInput = nullptr;
 	CCTextInputNode* speedhackInput = nullptr;
 	CCTextInputNode* respawnInput = nullptr;
@@ -108,15 +101,9 @@ public:
 
 	void openSaveMacro(CCObject*);
 
-	void showCodecPopup(CCObject*);
-
 	void toggleRecording(CCObject*);
 
 	void togglePlaying(CCObject*);
-
-	void toggleRender(CCObject* btn);
-
-	void openPresets(CCObject*);
 
 	void onAutosaves(CCObject*);
 

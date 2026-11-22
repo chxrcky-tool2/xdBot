@@ -13,7 +13,7 @@ class $modify(PlayLayer) {
         PlayLayer::postUpdate(dt);
         auto& g = Global::get();
 
-        if (g.state != state::none && g.frameLabel && !g.renderer.recording)
+        if (g.state != state::none && g.frameLabel)
             m_fields->frameLabel->setString(("Frame: " + std::to_string(Global::getCurrentFrame())).c_str());
     }
 
@@ -44,14 +44,6 @@ void Interface::addLabels(PlayLayer* pl) {
     lbl->setID("frame-label"_spr);
     lbl->setZOrder(300);
     lbl->setScale(0.625f);
-    pl->addChild(lbl);
-
-    lbl = CCLabelBMFont::create("Recording Audio", "bigFont.fnt");
-    lbl->setPosition(pl->getContentSize() / 2);
-    lbl->setID("recording-audio-label"_spr);
-    lbl->setZOrder(300);
-    lbl->setOpacity(75);
-    lbl->setVisible(false);
     pl->addChild(lbl);
 
     Interface::updateLabels();
@@ -127,12 +119,6 @@ void Interface::updateLabels() {
     if (labelText == "Playing" && state == state::playing && g.mod->getSavedValue<bool>("macro_hide_playing_label"))
         labelText = "";
 
-    if (g.renderer.recording && g.mod->getSavedValue<bool>("render_hide_labels")) {
-        labelText = "";
-        if (CCLabelBMFont* lbl = typeinfo_cast<CCLabelBMFont*>(pl->getChildByID("frame-label"_spr)))
-            lbl->setString("");
-    }
-
     label->setString(labelText.c_str());
 }
 
@@ -145,11 +131,7 @@ void Interface::updateButtons() {
 
     auto& g = Global::get();
 
-#ifdef GEODE_IS_WINDOWS
-    bool isWindows = true;
-#else
     bool isWindows = false;
-#endif
 
     CCNode* disableStepperBtn = menu->getChildByID("disable-stepper-btn");
     CCNode* stepFrameBtn = menu->getChildByID("step-frame-btn");
