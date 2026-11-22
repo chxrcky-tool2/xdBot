@@ -36,6 +36,7 @@ void notify(std::string const& text, NotificationIcon icon = NotificationIcon::S
 
 // ---- window visibility ------------------------------------------------------------------
 
+bool s_initialized = false;
 bool s_open = false;          // the menu windows (the floating button is always drawn)
 
 bool s_showNoclip = false;
