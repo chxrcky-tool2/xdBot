@@ -8,14 +8,6 @@
 	"name": "xdBot",
 	"developer": "Zilko",
 	"description": "Best Free Bot fr",
-	"dependencies": {
-		{
-			"id": "geode.custom-keybinds",
-			"version": ">=v1.10.0",
-			"importance": "required",
-			"platforms": ["win"]
-		}
-    },
 	"settings": {
 		"button-setting": {
 			"type": "custom:button",
@@ -30,7 +22,7 @@
 		"frame_offset": {
 			"name": "Frame Offset",
 			"description": "Adds a frame offset when recording or playing macros",
-			"type": "int", 
+			"type": "int",
 			"default": 0,
 			"min": -8,
 			"max": 8
@@ -39,7 +31,7 @@
 			"name": "Button at Endscreen",
 			"description": "Shows the menu button at the endscreen.",
 			"type": "bool",
-			"default": false 
+			"default": false
 		},
 		"ffmpeg_path": {
 			"name": "ffmpeg.exe Path",
@@ -64,10 +56,10 @@
 			"default": "{gd_dir}/renders"
 		},
 		"background_color": {
-            "name": "Menu background color",
-            "type": "color",
-            "default": "#334499"
-        },
+			"name": "Menu background color",
+			"type": "color",
+			"default": "#334499"
+		},
 		"editor_keybinds": {
 			"name": "Keybinds on editor",
 			"description": "Enables keybinds while on the level editor.",
@@ -128,20 +120,22 @@
 		}
 	},
 	"resources": {
-        "sprites": [
-            "resources/GJ_commentSide2_001_White.png",
-            "resources/GJ_commentTop2_001_White.png"
-        ],
+		"sprites": [
+			"resources/GJ_commentSide2_001_White.png",
+			"resources/GJ_commentTop2_001_White.png"
+		],
 		"files": [
-            "resources/default_hold_click.mp3",
-            "resources/default_release_click.mp3",
+			"resources/default_hold_click.mp3",
+			"resources/default_release_click.mp3",
 			"resources/default_hold_left.mp3",
-            "resources/default_release_left.mp3",
-            "resources/default_hold_right.mp3",
-            "resources/default_release_right.mp3"
-        ]
-    },
-	"links": { "source": "https://github.com/ZiLko/xdBot", "community": "https://discord.gg/w6yvdzVzBd" },
+			"resources/default_release_left.mp3",
+			"resources/default_hold_right.mp3",
+			"resources/default_release_right.mp3"
+		]
+	},
+	"links": {
+		"source": "https://github.com/ZiLko/xdBot",
+		"community": "https://discord.gg/w6yvdzVzBd"
+	},
 	"tags": ["gameplay", "utility", "cheat"]
-
-}
+		}
