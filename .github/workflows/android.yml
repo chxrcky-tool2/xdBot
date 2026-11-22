@@ -1,40 +1,14 @@
-name: Build Android
+- name: Build the mod
+  uses: geode-sdk/build-geode-mod@main
+  id: build
+  with:
+    bindings: geode-sdk/bindings
+    bindings-ref: main
+    combine: false
+    target: ${{ matrix.config.target }}
 
-on:
-  workflow_dispatch:
-  push:
-    branches:
-      - "d"
-
-jobs:
-  build:
-    strategy:
-      fail-fast: false
-      matrix:
-        config:
-          - name: Android32
-            os: ubuntu-latest
-            target: Android32
-          - name: Android64
-            os: ubuntu-latest
-            target: Android64
-
-    name: ${{ matrix.config.name }}
-    runs-on: ${{ matrix.config.os }}
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Build the mod
-        uses: geode-sdk/build-geode-mod@main
-        with:
-          bindings: geode-sdk/bindings
-          bindings-ref: main
-          combine: false
-          target: ${{ matrix.config.target }}
-
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.config.name }}-build
-          path: ${{ steps.build.outputs.build-output }}
+- name: Upload Artifact
+  uses: actions/upload-artifact@v4
+  with:
+    name: ${{ matrix.config.name }}-build
+    path: ${{ steps.build.outputs.build-output }}
