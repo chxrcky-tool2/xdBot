@@ -26,15 +26,9 @@ class $modify(GJBaseGameLayer) {
 };
 
 class $modify(CheckpointObject) {
-  #ifdef GEODE_IS_WINDOWS
-  bool init() {
-    bool ret = CheckpointObject::init();
-    CheckpointObject* cp = this;
-  #else
   static CheckpointObject* create() {
     CheckpointObject* ret = CheckpointObject::create();
     CheckpointObject* cp = ret;
-  #endif
 
     if (!cp) return ret;
 
@@ -48,11 +42,7 @@ class $modify(CheckpointObject) {
       Global::getCurrentFrame(),
       p1Data,
       p2Data,
-      #ifdef GEODE_IS_WINDOWS
-      *(uintptr_t*)((char*)geode::base::get() + seedAddr),
-      #else
       0,
-      #endif
       Global::get().previousFrame
     };
 
@@ -117,14 +107,6 @@ class $modify(PlayLayer) {
     g.ignoreJumpButton = frame + 1;
     g.previousFrame = g.checkpoints[cp].previousFrame;
 
-    #ifdef GEODE_IS_WINDOWS
-
-    if (g.seedEnabled) {
-      uintptr_t seed = g.checkpoints[cp].seed;
-      *(uintptr_t*)((char*)geode::base::get() + seedAddr) = seed;
-    }
-
-    #endif
 
     if (g.state == state::recording)
       InputPracticeFixes::applyFixes(this, p1Data, p2Data, frame);
