@@ -27,6 +27,7 @@ add_library(${PROJECT_NAME} SHARED
     src/ui/button_edit_layer.cpp
     src/ui/game_ui.cpp
     src/ui/xd_menu.cpp
+    src/ui/xd.overlay.cpp
     src/ui/load_macro_layer.cpp
     src/ui/clickbot_layer.cpp
     src/ui/button_setting.cpp
