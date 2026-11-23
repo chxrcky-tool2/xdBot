@@ -505,8 +505,8 @@ void openLegacy(std::function<void()> fn) {
 // =============================================================================================
 
 void drawFloatingButton() {
-    if (savedBool("xd_hide_button")) return;
-
+    if (true) return;
+    
     ImGuiIO& io = ImGui::GetIO();
     ImVec2 disp = io.DisplaySize;
     float d = 54.f * s_scale;
