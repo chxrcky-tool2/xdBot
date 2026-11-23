@@ -29,3 +29,5 @@ built-in, not requiring FFmpeg Api dependency
 Help button next to Resolution, which picks your phone's supported resolution.
 }
 ImGui themes to choose from. can make one via adjusting colors in  a new tab called *Themes* which will contain all things for theme choosing.
+
+Headless physics loop, when 6k tps, your icon player will experience physics of 6k tps, but your screen will show your native Hz/FPS.
