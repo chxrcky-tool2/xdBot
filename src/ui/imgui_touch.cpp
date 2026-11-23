@@ -1,27 +1,12 @@
+#include <imgui-cocos.hpp>
+#include <imgui_internal.h>
+
 #include "../includes.hpp"
 
 #include <Geode/modify/CCTouchDispatcher.hpp>
 
-#include <imgui-cocos.hpp>
-#include <imgui_internal.h>
-
-// =============================================================================================
-//  Touch bridge for the ImGui overlay (Android)
-//
-//  Problem: taps never reached ImGui, and since ImGui never had a mouse position, GD itself
-//  received every tap (so "Noclip" in the menu pressed the Mega Hack search bar behind it).
-//
-//  Fix: look at every touch BEFORE GD does.
-//    - if the finger lands on an ImGui window -> feed it to ImGui as a left mouse button and
-//      hide it from GD (the touch never reaches the game / other mods)
-//    - otherwise -> let it pass through to GD untouched
-//  The "is it on an ImGui window" test is done right here with the window rectangles, so it
-//  doesn't depend on io.WantCaptureMouse (which is always one frame late for touch input).
-// =============================================================================================
-
 namespace {
 
-// cocos touch types
 constexpr unsigned int kTouchBegan = 0;
 constexpr unsigned int kTouchEnded = 2;
 constexpr unsigned int kTouchCancelled = 3;
