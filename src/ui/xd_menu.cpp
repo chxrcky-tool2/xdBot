@@ -1,5 +1,6 @@
 #include "xd_menu.hpp"
 #include "game_ui.hpp"
+#include "xd.labels.hpp"
 #include "macro_editor.hpp"
 #include "clickbot_layer.hpp"
 #include "../hacks/coin_finder.hpp"
@@ -19,10 +20,6 @@
 
 namespace fs = std::filesystem;
 
-// =============================================================================================
-//  Helpers + state
-// =============================================================================================
-
 namespace {
 
 Mod* M() { return Global::get().mod; }
@@ -34,10 +31,8 @@ void notify(std::string const& text, NotificationIcon icon = NotificationIcon::S
     Notification::create(text, icon)->show();
 }
 
-// ---- window visibility ------------------------------------------------------------------
-
 bool s_initialized = false;
-bool s_open = false;          // the menu windows (the floating button is always drawn)
+bool s_open = false;
 
 bool s_showNoclip = false;
 bool s_showTrajectory = false;
@@ -48,33 +43,25 @@ bool s_showSave = false;
 bool s_showLoad = false;
 bool s_showInfo = false;
 
-// ---- look ---------------------------------------------------------------------------------
-
 ImVec4 s_accent = ImVec4(0.54f, 0.42f, 1.00f, 1.00f);
-float s_userScale = 0.f;      // 0 = automatic
+float s_userScale = 0.f;
 float s_opacity = 0.94f;
-float s_scale = 1.f;          // effective scale
-float s_fontPx = 13.f;        // pixel size the font atlas was baked at (13 = ImGui default font)
+float s_scale = 1.f;
+float s_fontPx = 13.f;
 
 float s_appliedScale = -1.f;
 float s_appliedOpacity = -1.f;
 ImVec4 s_appliedAccent = ImVec4(-1, -1, -1, -1);
 
-// ---- floating button ----------------------------------------------------------------------
-
 ImVec2 s_btnPos = ImVec2(-1.f, -1.f);
 ImVec2 s_btnDragStart = ImVec2(0.f, 0.f);
 bool s_btnDragging = false;
-
-// ---- save window --------------------------------------------------------------------------
 
 char s_saveName[128] = "";
 char s_saveAuthor[64] = "";
 char s_saveDesc[256] = "";
 bool s_saveJson = false;
 bool s_saveNeedsInit = true;
-
-// ---- load window --------------------------------------------------------------------------
 
 struct MacroEntry {
     fs::path path;
@@ -90,8 +77,6 @@ int s_confirmDelete = -1;
 int s_confirmLoad = -1;
 char s_search[64] = "";
 geode::async::TaskHolder<geode::utils::file::PickResult> s_pickHolder;
-
-// ---- misc ---------------------------------------------------------------------------------
 
 bool savedBool(char const* id) { return M()->getSavedValue<bool>(id); }
 
@@ -118,17 +103,12 @@ std::string sanitizeName(std::string name) {
     return name;
 }
 
-// Finds "<base> (n)<ext>" that doesn't exist yet.
 std::string uniquePath(std::string base, std::string const& ext) {
     std::string path = base + ext;
     int i = 1;
     while (fs::exists(path)) path = fmt::format("{} ({}){}", base, i++, ext);
     return path;
 }
-
-// =============================================================================================
-//  Style (Megahack-ish: dark, flat, rounded, accent colour, full-width rows)
-// =============================================================================================
 
 void applyStyle() {
     ImGuiIO& io = ImGui::GetIO();
@@ -154,9 +134,8 @@ void applyStyle() {
     st.WindowTitleAlign = ImVec2(0.5f, 0.5f);
     st.ScaleAllSizes(s_scale);
 
-    // Layout metrics assume a ~13px font, so scale relative to what was actually baked.
     io.FontGlobalScale = s_scale * (13.f / s_fontPx);
-    io.ConfigWindowsMoveFromTitleBarOnly = true; // body drags must not move windows (touch friendly)
+    io.ConfigWindowsMoveFromTitleBarOnly = true;
 
     ImVec4* c = st.Colors;
     c[ImGuiCol_Text]                 = ImVec4(0.93f, 0.93f, 0.96f, 1.00f);
@@ -198,7 +177,6 @@ void updateStyleIfNeeded() {
         || s_appliedOpacity != s_opacity
         || s_appliedAccent.x != s_accent.x || s_appliedAccent.y != s_accent.y || s_appliedAccent.z != s_accent.z;
 
-    // auto scale follows the display size
     if (!changed && s_userScale <= 0.01f && std::fabs(uiScaleAuto() - s_scale) > 0.001f) changed = true;
 
     if (changed) applyStyle();
@@ -236,7 +214,6 @@ void saveAccent() {
     ));
 }
 
-// Optional: drop a "font.ttf" in the mod's resources folder for crisp text instead of the pixel font.
 void loadFont() {
     ImGuiIO& io = ImGui::GetIO();
     fs::path ttf = toStdPath(M()->getResourcesDir()) / "font.ttf";
@@ -251,11 +228,6 @@ void loadFont() {
     s_fontPx = 13.f;
 }
 
-// =============================================================================================
-//  Widgets
-// =============================================================================================
-
-// Full-width tappable row with a tick box on the right. Optional gear zone for sub settings.
 bool toggleRow(char const* label, bool* value, bool* gearPressed = nullptr, bool disabled = false) {
     ImDrawList* dl = ImGui::GetWindowDrawList();
     ImGuiStyle& st = ImGui::GetStyle();
@@ -288,17 +260,14 @@ bool toggleRow(char const* label, bool* value, bool* gearPressed = nullptr, bool
     float alpha = disabled ? 0.45f : 1.f;
     float rounding = st.FrameRounding;
 
-    // row background
     ImVec4 bg = held ? mul(s_accent, 0.35f, 1.f) : hov ? ImVec4(0.17f, 0.17f, 0.22f, 1.f) : ImVec4(0.115f, 0.115f, 0.15f, 1.f);
     bg.w *= alpha;
     dl->AddRectFilled(p, ImVec2(p.x + w, p.y + h), u32(bg), rounding);
 
-    // label
     ImVec4 tc = ImGui::GetStyle().Colors[ImGuiCol_Text];
     tc.w *= alpha;
     dl->AddText(ImVec2(p.x + st.FramePadding.x, p.y + (h - ImGui::GetTextLineHeight()) * 0.5f), u32(tc), label);
 
-    // tick box
     float bs = h * 0.52f;
     ImVec2 b0 = ImVec2(p.x + w - gearW - st.FramePadding.x - bs, p.y + (h - bs) * 0.5f);
     ImVec2 b1 = ImVec2(b0.x + bs, b0.y + bs);
@@ -316,7 +285,6 @@ bool toggleRow(char const* label, bool* value, bool* gearPressed = nullptr, bool
         dl->AddRect(b0, b1, IM_COL32(120, 120, 140, int(255 * alpha)), bs * 0.28f, 0, std::max(1.f, bs * 0.09f));
     }
 
-    // gear zone (a chevron on a darker cap)
     if (gearPressed) {
         ImVec2 g0 = ImVec2(p.x + w - gearW, p.y);
         ImVec2 g1 = ImVec2(p.x + w, p.y + h);
@@ -340,7 +308,6 @@ bool toggleRow(char const* label, bool* value, bool* gearPressed = nullptr, bool
     return false;
 }
 
-// Row backed by a saved bool setting. Returns true when the user changed it.
 bool settingRow(char const* label, char const* id, bool* gearPressed = nullptr, bool disabled = false) {
     bool v = savedBool(id);
     if (toggleRow(label, &v, gearPressed, disabled)) {
@@ -367,7 +334,6 @@ void smallLabel(char const* text) {
     ImGui::TextDisabled("%s", text);
 }
 
-// Window with a fixed width and auto height, cascaded on first use.
 bool beginWindow(char const* title, bool* open, int slot, float width, bool floating = false) {
     ImVec2 disp = ImGui::GetIO().DisplaySize;
     float w = width * s_scale;
@@ -379,10 +345,6 @@ bool beginWindow(char const* title, bool* open, int slot, float width, bool floa
     ImGui::SetNextWindowSize(ImVec2(w, 0.f), ImGuiCond_Always);
     return ImGui::Begin(title, open, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings);
 }
-
-// =============================================================================================
-//  Macro file helpers
-// =============================================================================================
 
 void refreshMacroList() {
     s_macros.clear();
@@ -494,19 +456,14 @@ void openSaveWindow() {
     s_showSave = true;
 }
 
-// Legacy cocos popups (editor, button editor, clickbot) are opened from here; menu closes so they're usable.
 void openLegacy(std::function<void()> fn) {
     s_open = false;
     Loader::get()->queueInMainThread(std::move(fn));
 }
 
-// =============================================================================================
-//  Floating "xd" button
-// =============================================================================================
-
 void drawFloatingButton() {
     if (true) return;
-    
+
     ImGuiIO& io = ImGui::GetIO();
     ImVec2 disp = io.DisplaySize;
     float d = 54.f * s_scale;
@@ -565,7 +522,6 @@ void drawFloatingButton() {
     ImGui::PopStyleColor();
     ImGui::PopStyleVar(2);
 
-    // drawn on the foreground list so it follows the finger without a frame of lag
     ImDrawList* dl = ImGui::GetForegroundDrawList();
     ImVec2 c = ImVec2(s_btnPos.x + r, s_btnPos.y + r);
 
@@ -576,10 +532,10 @@ void drawFloatingButton() {
 
     float pulse = (active || s_open) ? 1.f : 0.80f;
 
-    dl->AddCircleFilled(ImVec2(c.x, c.y + r * 0.06f), r * 1.04f, IM_COL32(0, 0, 0, 70), 48);           // soft shadow
-    dl->AddCircleFilled(c, r, u32(ImVec4(0.055f, 0.055f, 0.075f, 0.92f * pulse + 0.06f)), 48);          // body
-    dl->AddCircleFilled(c, r * 0.86f, u32(mul(ring, 0.18f, 0.55f)), 48);                                  // tint
-    dl->AddCircle(c, r - 1.f, u32(ImVec4(ring.x, ring.y, ring.z, pulse)), 48, std::max(2.f, d * 0.05f)); // ring
+    dl->AddCircleFilled(ImVec2(c.x, c.y + r * 0.06f), r * 1.04f, IM_COL32(0, 0, 0, 70), 48);
+    dl->AddCircleFilled(c, r, u32(ImVec4(0.055f, 0.055f, 0.075f, 0.92f * pulse + 0.06f)), 48);
+    dl->AddCircleFilled(c, r * 0.86f, u32(mul(ring, 0.18f, 0.55f)), 48);
+    dl->AddCircle(c, r - 1.f, u32(ImVec4(ring.x, ring.y, ring.z, pulse)), 48, std::max(2.f, d * 0.05f));
 
     ImFont* font = ImGui::GetFont();
     float fs = r * 0.95f;
@@ -587,13 +543,9 @@ void drawFloatingButton() {
     ImVec2 tp = ImVec2(c.x - ts.x * 0.5f, c.y - ts.y * 0.5f);
     ImU32 tc = IM_COL32(245, 245, 255, int(255 * pulse));
     float o = std::max(0.6f, fs * 0.035f);
-    dl->AddText(font, fs, ImVec2(tp.x + o, tp.y), tc, "xd");   // faux bold
+    dl->AddText(font, fs, ImVec2(tp.x + o, tp.y), tc, "xd");
     dl->AddText(font, fs, tp, tc, "xd");
 }
-
-// =============================================================================================
-//  Windows
-// =============================================================================================
 
 void drawMainWindow() {
     auto& g = Global::get();
@@ -657,7 +609,6 @@ void drawHacksWindow() {
 
     sectionTitle("Speed");
 
-    // TPS bypass
     settingRow("TPS Bypass", "macro_tps_enabled", nullptr, tpsLocked);
     {
         float tps = static_cast<float>(mod->getSavedValue<double>("macro_tps"));
@@ -672,7 +623,6 @@ void drawHacksWindow() {
         if (tpsLocked) ImGui::EndDisabled();
     }
 
-    // Speedhack
     settingRow("Speedhack", "macro_speedhack_enabled");
     {
         float sh = geode::utils::numFromString<float>(mod->getSavedValue<std::string>("macro_speedhack")).unwrapOr(1.f);
@@ -683,7 +633,6 @@ void drawHacksWindow() {
         }
     }
 
-    // Seed
     settingRow("Seed", "macro_seed_enabled");
     {
         unsigned long long seed = geode::utils::numFromString<unsigned long long>(mod->getSavedValue<std::string>("macro_seed")).unwrapOr(1ull);
@@ -694,7 +643,6 @@ void drawHacksWindow() {
         }
     }
 
-    // Respawn time
     settingRow("Respawn Time", "respawn_time_enabled");
     {
         double rt = mod->getSavedValue<double>("respawn_time");
@@ -765,11 +713,8 @@ void drawExtrasWindow() {
         if (gear) s_showAutosave = true;
     }
 
-    sectionTitle("Labels & Buttons");
+    sectionTitle("Buttons");
 
-    settingRow("Show Frame Label", "macro_show_frame_label");
-    settingRow("Hide Playing Label", "macro_hide_playing_label");
-    settingRow("Hide Recording Label", "macro_hide_recording_label");
     settingRow("Always Show Buttons", "macro_always_show_buttons");
     settingRow("Hide Speedhack Button", "macro_hide_speedhack");
     settingRow("Hide Stepper Button", "macro_hide_stepper");
@@ -831,8 +776,6 @@ void drawMenuSettingsWindow() {
 
     ImGui::End();
 }
-
-// ---- sub windows ----------------------------------------------------------------------------
 
 void drawNoclipWindow() {
     if (!beginWindow("Noclip", &s_showNoclip, 0, 220.f, true)) { ImGui::End(); return; }
@@ -1120,7 +1063,7 @@ void drawLoadWindow() {
         ImGui::Separator();
         ImGui::PopID();
 
-        if (s_loadNeedsRefresh) break; // list changed under us
+        if (s_loadNeedsRefresh) break;
     }
 
     if (shown == 0) ImGui::TextDisabled(s_loadAutosaves ? "No Autosaves" : "No Macros");
@@ -1180,12 +1123,15 @@ void drawAll() {
 
     drawFloatingButton();
 
+    XDLabels::drawOverlay();
+
     if (!s_open) return;
 
     drawMainWindow();
     drawHacksWindow();
     drawExtrasWindow();
     drawMenuSettingsWindow();
+    XDLabels::drawWindow();
 
     if (s_showNoclip) drawNoclipWindow();
     if (s_showMirror) drawMirrorWindow();
@@ -1197,11 +1143,35 @@ void drawAll() {
     if (s_showInfo) drawInfoWindow();
 }
 
-} // namespace
+}
 
-// =============================================================================================
-//  Public API
-// =============================================================================================
+bool XDMenu::Ui::toggleRow(char const* label, bool* value, bool* gearPressed, bool disabled) {
+    return ::toggleRow(label, value, gearPressed, disabled);
+}
+
+bool XDMenu::Ui::settingRow(char const* label, char const* id, bool* gearPressed, bool disabled) {
+    return ::settingRow(label, id, gearPressed, disabled);
+}
+
+bool XDMenu::Ui::fullButton(char const* label, float widthFraction) {
+    return ::fullButton(label, widthFraction);
+}
+
+void XDMenu::Ui::sectionTitle(char const* text) {
+    ::sectionTitle(text);
+}
+
+void XDMenu::Ui::smallLabel(char const* text) {
+    ::smallLabel(text);
+}
+
+bool XDMenu::Ui::beginWindow(char const* title, bool* open, int slot, float width, bool floating) {
+    return ::beginWindow(title, open, slot, width, floating);
+}
+
+float XDMenu::Ui::textSize() {
+    return 13.f * s_scale;
+}
 
 void XDMenu::init() {
     if (s_initialized) return;
@@ -1279,13 +1249,11 @@ void XDMenu::togglePlaying() {
     Macro::updateTPS();
 }
 
-// Port of the old RecordLayer::toggleSetting without the cocos toggler.
 void XDMenu::applySetting(std::string const& id, bool value) {
     auto& g = Global::get();
 
     g.mod->setSavedValue(id, value);
 
-    // Some of these get checked every frame so they're cached in Global.
     if (id == "macro_seed_enabled") g.seedEnabled = value;
     if (id == "macro_speedhack_enabled") g.speedhackEnabled = value;
     if (id == "macro_speedhack_audio") g.speedhackAudio = value;
@@ -1322,7 +1290,7 @@ void XDMenu::applySetting(std::string const& id, bool value) {
     if (id == "clickbot_enabled" || id == "clickbot_playing_only")
         Clickbot::updateSounds();
 
-    if (id == "macro_hide_recording_label" || id == "macro_hide_playing_label")
+    if (id == "macro_hide_recording_label" || id == "macro_hide_playing_label" || id == "xd_overlay_enabled")
         Interface::updateLabels();
 
     if (id == "macro_hide_speedhack" || id == "macro_hide_stepper" || id == "macro_always_show_buttons")

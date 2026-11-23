@@ -1,5 +1,6 @@
 #include "../includes.hpp"
 #include "game_ui.hpp"
+#include "xd.labels.hpp"
 
 #include <Geode/modify/PlayLayer.hpp>
 
@@ -105,7 +106,7 @@ void Interface::updateLabels() {
 
     if (!label) return;
 
-    if (g.mod->getSavedValue<bool>("macro_hide_labels"))
+    if (g.mod->getSavedValue<bool>("macro_hide_labels") || XDLabels::overlayEnabled())
         return label->setString("");
 
     state state = g.state;
