@@ -31,6 +31,7 @@ add_library(${PROJECT_NAME} SHARED
     src/ui/clickbot_layer.cpp
     src/ui/button_setting.cpp
     src/ui/imgui_touch.cpp
+    src/ui/xd_touch.cpp
 
     src/practice_fixes/input.cpp
     src/practice_fixes/player.cpp
@@ -49,7 +50,7 @@ setup_geode_mod(${PROJECT_NAME})
 target_compile_options(${PROJECT_NAME} PRIVATE -ferror-limit=0)
 
 # ImGui overlay (replaces the old cocos2d menu).
-# imgui-cocos is built as a static lib and linked into the mod. Pin <commit> once you've picked a known-good one.
+# imgui-cocos is built as a static lib and linked into the mod. I will pin a <commit> once I picked a known-good one.
 CPMAddPackage("gh:matcool/gd-imgui-cocos#geode")
 target_link_libraries(${PROJECT_NAME} imgui-cocos)
 
