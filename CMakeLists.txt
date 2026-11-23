@@ -30,6 +30,7 @@ add_library(${PROJECT_NAME} SHARED
     src/ui/load_macro_layer.cpp
     src/ui/clickbot_layer.cpp
     src/ui/button_setting.cpp
+    src/ui/imgui_touch.cpp
 
     src/practice_fixes/input.cpp
     src/practice_fixes/player.cpp
