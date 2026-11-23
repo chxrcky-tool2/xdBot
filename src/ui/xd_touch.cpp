@@ -3,6 +3,7 @@
 
 #include <Geode/ui/BasedButtonSprite.hpp>
 #include <Geode/modify/MenuLayer.hpp>
+#include <Geode/modify/CCDirector.hpp>
 
 class XDFab : public CCLayer {
 public:
@@ -107,9 +108,24 @@ class $modify(XDFabMenuLayer, MenuLayer) {
 
         if (!s_fab) {
             s_fab = XDFab::create();
-            if (s_fab) SceneManager::get()->keepAcrossScenes(s_fab);
+            if (s_fab) s_fab->retain();
         }
 
         return true;
+    }
+};
+
+class $modify(XDFabDirector, CCDirector) {
+    void drawScene() {
+        CCScene* scene = this->getRunningScene();
+
+        if (s_fab && scene && s_fab->getParent() != scene) {
+            if (s_fab->getParent()) s_fab->removeFromParentAndCleanup(false);
+            scene->addChild(s_fab, 100000);
+            s_fab->unscheduleUpdate();
+            s_fab->scheduleUpdate();
+        }
+
+        CCDirector::drawScene();
     }
 };
