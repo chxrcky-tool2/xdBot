@@ -2,7 +2,7 @@ Credits to Zilko, and to whoever Zilko credited in their ReadMe if they have.
 
 all rights reserved©
 
-Lowk, I wanna make it xdDroid since I wanted to fork xdBot for Android, cuz I have no windows
+Lowk, I wanna make it xdCky since I wanted to fork xdBot for Android, cuz I have no windows
 but will keep xdBot since it still sounds cool.
 
 What I changed:
