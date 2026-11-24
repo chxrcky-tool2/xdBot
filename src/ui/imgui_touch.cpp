@@ -22,14 +22,18 @@ ImVec2 toImGui(CCPoint const& gl) {
     return ImVec2(gl.x / win.width * disp.x, (1.f - gl.y / win.height) * disp.y);
 }
 
-// True if the point is on top of any visible ImGui window (including popups like the colour picker).
+// True if the point is on top of a visible, input-receiving ImGui window.
+// Uses Active only (not WasActive) so a window that was just closed can't eat one more tap.
 bool overImGuiWindow(ImVec2 p) {
     ImGuiContext* ctx = ImGui::GetCurrentContext();
     if (!ctx) return false;
 
+    constexpr ImGuiWindowFlags skip =
+        ImGuiWindowFlags_ChildWindow | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_Tooltip;
+
     for (ImGuiWindow* w : ctx->Windows) {
-        if (!w->Active && !w->WasActive) continue;
-        if (w->Flags & (ImGuiWindowFlags_ChildWindow | ImGuiWindowFlags_NoInputs)) continue;
+        if (!w || !w->Active || w->Hidden) continue;
+        if (w->Flags & skip) continue;
         if (w->Rect().Contains(p)) return true;
     }
     return false;
@@ -39,16 +43,28 @@ bool overImGuiWindow(ImVec2 p) {
 
 class $modify(XDTouchDispatcher, CCTouchDispatcher) {
     void touches(CCSet* set, CCEvent* event, unsigned int type) {
-        if (!set || set->count() == 0 || !ImGui::GetCurrentContext() || ImGui::GetIO().DisplaySize.x <= 0.f)
+        // Never throw away a touch-end for a finger ImGui owns, even if ImGui is in a weird state.
+        bool const imguiReady = ImGui::GetCurrentContext() && ImGui::GetIO().DisplaySize.x > 0.f;
+
+        if (!set || set->count() == 0 || !imguiReady) {
+            s_capturedId = -1; // don't leave a capture dangling if ImGui went away
             return CCTouchDispatcher::touches(set, event, type);
+        }
 
         ImGuiIO& io = ImGui::GetIO();
-        std::vector<CCTouch*> mine;
+
+        // Touches GD should still see. Built as a NEW set: the engine owns `set` and the
+        // CCTouch objects in it (its touch table holds raw pointers), so we never remove
+        // from it.
+        CCSet* forGame = nullptr;
+        size_t total = 0, taken = 0;
 
         for (auto it = set->begin(); it != set->end(); ++it) {
             auto* touch = static_cast<CCTouch*>(*it);
             if (!touch) continue;
+            ++total;
 
+            bool imguiTouch = false;
             ImVec2 p = toImGui(touch->getLocation());
 
             if (type == kTouchBegan) {
@@ -56,8 +72,7 @@ class $modify(XDTouchDispatcher, CCTouchDispatcher) {
                     s_capturedId = touch->getID();
                     io.AddMousePosEvent(p.x, p.y);
                     io.AddMouseButtonEvent(0, true);
-                    mine.push_back(touch);
-                    log::debug("[xdBot] ImGui took touch at {:.0f}, {:.0f}", p.x, p.y);
+                    imguiTouch = true;
                 }
             }
             else if (touch->getID() == s_capturedId) {
@@ -65,23 +80,30 @@ class $modify(XDTouchDispatcher, CCTouchDispatcher) {
 
                 if (type == kTouchEnded || type == kTouchCancelled) {
                     io.AddMouseButtonEvent(0, false);
-                    io.AddMousePosEvent(-FLT_MAX, -FLT_MAX); // no stuck hover highlight after lifting the finger
+                    io.AddMousePosEvent(-FLT_MAX, -FLT_MAX); // no stuck hover after lifting the finger
                     s_capturedId = -1;
                 }
-                mine.push_back(touch);
+                imguiTouch = true;
+            }
+
+            if (imguiTouch) {
+                ++taken;
+            }
+            else {
+                if (!forGame) forGame = CCSet::create(); // autoreleased
+                forGame->addObject(touch);               // retains; balanced when forGame dies
             }
         }
 
-        // nothing was ImGui's -> GD handles it as usual
-        if (mine.empty())
+        // Nothing was ImGui's -> hand GD the original, untouched set.
+        if (taken == 0)
             return CCTouchDispatcher::touches(set, event, type);
 
-        // everything was ImGui's -> GD never sees it
-        if (static_cast<size_t>(set->count()) == mine.size())
+        // Everything was ImGui's -> GD never sees it.
+        if (!forGame)
             return;
 
-        // mixed (multi-touch): only hide ImGui's finger from GD
-        for (auto* t : mine) set->removeObject(t);
-        CCTouchDispatcher::touches(set, event, type);
+        // Multi-touch: GD gets only its own fingers.
+        CCTouchDispatcher::touches(forGame, event, type);
     }
 };
