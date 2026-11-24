@@ -68,7 +68,7 @@ float XDLabels::overlayOpacity() {
 }
 
 float XDLabels::overlayScale() {
-    return std::clamp(static_cast<float>(Mod::get()->getSavedValue<double>("xd_overlay_scale", kDefaultScale)), 0.5f, 3.f);
+    return std::clamp(static_cast<float>(Mod::get()->getSavedValue<double>("xd_overlay_scale", kDefaultScale)), 0.5f, 6.f);
 }
 
 int XDLabels::overlayCorner() {
@@ -159,16 +159,14 @@ void XDLabels::drawWindow() {
     Ui::smallLabel("Opacity");
     {
         float v = overlayOpacity();
-        ImGui::SetNextItemWidth(-FLT_MIN);
-        if (ImGui::SliderFloat("##overlay_opacity", &v, 0.05f, 1.f, "%.2fx"))
+        if (Ui::touchSlider("##overlay_opacity", &v, 0.05f, 1.f, "%.2fx"))
             Mod::get()->setSavedValue("xd_overlay_opacity", static_cast<double>(v));
     }
 
     Ui::smallLabel("Scale");
     {
         float v = overlayScale();
-        ImGui::SetNextItemWidth(-FLT_MIN);
-        if (ImGui::SliderFloat("##overlay_scale", &v, 0.5f, 3.f, "%.2fx"))
+        if (Ui::touchSlider("##overlay_scale", &v, 0.5f, 6.f, "%.2fx"))
             Mod::get()->setSavedValue("xd_overlay_scale", static_cast<double>(v));
     }
 

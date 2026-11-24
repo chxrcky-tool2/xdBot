@@ -25,6 +25,7 @@ namespace XDMenu {
         void sectionTitle(char const* text);
         void smallLabel(char const* text);
         bool beginWindow(char const* title, bool* open, int slot, float width, bool floating = false);
+        bool touchSlider(char const* id, float* value, float lo, float hi, char const* format, bool* released = nullptr);
         float textSize();
 
     }

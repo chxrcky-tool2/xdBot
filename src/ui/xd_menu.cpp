@@ -82,7 +82,7 @@ bool savedBool(char const* id) { return M()->getSavedValue<bool>(id); }
 
 float uiScaleAuto() {
     float h = ImGui::GetIO().DisplaySize.y;
-    return std::clamp(h / 700.f, 0.85f, 2.5f);
+    return std::clamp(h / 420.f, 1.4f, 5.f);
 }
 
 bool ensureFolder(fs::path const& path) {
@@ -324,6 +324,96 @@ bool fullButton(char const* label, float widthFraction = 1.f) {
     return ImGui::Button(label, ImVec2(w, ImGui::GetFrameHeight() * 1.1f));
 }
 
+bool touchSlider(char const* id, float* value, float lo, float hi, char const* format, bool* released = nullptr) {
+    ImGuiIO& io = ImGui::GetIO();
+    ImGuiStyle& st = ImGui::GetStyle();
+    ImDrawList* dl = ImGui::GetWindowDrawList();
+
+    float h = ImGui::GetFrameHeight() * 1.1f;
+    float w = ImGui::GetContentRegionAvail().x;
+    float spacing = st.ItemInnerSpacing.x;
+    float trackW = std::max(1.f, w - (h + spacing) * 2.f);
+    float range = hi - lo;
+    bool changed = false;
+
+    ImGui::PushID(id);
+    ImVec2 p = ImGui::GetCursorScreenPos();
+
+    bool minus = ImGui::InvisibleButton("##minus", ImVec2(h, h));
+    ImGui::SameLine(0.f, spacing);
+
+    ImGui::InvisibleButton("##track", ImVec2(trackW, h));
+    bool active = ImGui::IsItemActive();
+    ImGuiID trackId = ImGui::GetItemID();
+    ImGuiStorage* store = ImGui::GetStateStorage();
+
+    if (ImGui::IsItemActivated()) {
+        store->SetFloat(trackId, io.MousePos.x);
+        store->SetFloat(trackId + 1, *value);
+    }
+
+    if (active && range > 0.f) {
+        float startX = store->GetFloat(trackId, io.MousePos.x);
+        float startV = store->GetFloat(trackId + 1, *value);
+        float nv = std::clamp(startV + (io.MousePos.x - startX) / trackW * range, lo, hi);
+        if (nv != *value) {
+            *value = nv;
+            changed = true;
+        }
+    }
+
+    if (released && ImGui::IsItemDeactivated()) *released = true;
+
+    ImGui::SameLine(0.f, spacing);
+    bool plus = ImGui::InvisibleButton("##plus", ImVec2(h, h));
+    ImGui::PopID();
+
+    if ((minus || plus) && range > 0.f) {
+        float step = range / 20.f;
+        *value = std::clamp(*value + (plus ? step : -step), lo, hi);
+        changed = true;
+        if (released) *released = true;
+    }
+
+    float rounding = st.FrameRounding;
+    float t = range > 0.f ? std::clamp((*value - lo) / range, 0.f, 1.f) : 0.f;
+
+    auto stepButton = [&](float x, bool isPlus) {
+        ImVec2 a = ImVec2(x, p.y);
+        ImVec2 b = ImVec2(x + h, p.y + h);
+        bool hov = ImGui::IsMouseHoveringRect(a, b);
+        dl->AddRectFilled(a, b, u32(hov ? mul(s_accent, 0.45f, 1.f) : ImVec4(0.15f, 0.15f, 0.20f, 1.f)), rounding);
+        ImVec2 m = ImVec2((a.x + b.x) * 0.5f, (a.y + b.y) * 0.5f);
+        float r = h * 0.2f;
+        float th = std::max(1.5f, h * 0.07f);
+        ImU32 col = IM_COL32(230, 230, 245, 255);
+        dl->AddLine(ImVec2(m.x - r, m.y), ImVec2(m.x + r, m.y), col, th);
+        if (isPlus) dl->AddLine(ImVec2(m.x, m.y - r), ImVec2(m.x, m.y + r), col, th);
+    };
+
+    stepButton(p.x, false);
+    stepButton(p.x + w - h, true);
+
+    ImVec2 t0 = ImVec2(p.x + h + spacing, p.y);
+    ImVec2 t1 = ImVec2(t0.x + trackW, p.y + h);
+    dl->AddRectFilled(t0, t1, u32(ImVec4(0.13f, 0.13f, 0.17f, 1.f)), rounding);
+
+    float fillX = t0.x + trackW * t;
+    if (fillX > t0.x + 1.f)
+        dl->AddRectFilled(t0, ImVec2(fillX, t1.y), u32(mul(s_accent, 0.55f, 1.f)), rounding);
+
+    float gw = std::max(h * 0.28f, 6.f);
+    float gx = std::clamp(fillX, t0.x + gw * 0.5f, t1.x - gw * 0.5f);
+    dl->AddRectFilled(ImVec2(gx - gw * 0.5f, t0.y + 2.f), ImVec2(gx + gw * 0.5f, t1.y - 2.f), u32(active ? mul(s_accent, 1.15f, 1.f) : s_accent), rounding);
+
+    char text[64];
+    std::snprintf(text, sizeof(text), format, *value);
+    ImVec2 ts = ImGui::CalcTextSize(text);
+    dl->AddText(ImVec2((t0.x + t1.x - ts.x) * 0.5f, p.y + (h - ts.y) * 0.5f), IM_COL32(245, 245, 255, 255), text);
+
+    return changed;
+}
+
 void sectionTitle(char const* text) {
     ImGui::Spacing();
     ImGui::TextColored(mul(s_accent, 1.f, 1.f), "%s", text);
@@ -339,10 +429,15 @@ bool beginWindow(char const* title, bool* open, int slot, float width, bool floa
     float w = width * s_scale;
     ImVec2 pos;
     if (floating) pos = ImVec2((disp.x - w) * 0.5f, disp.y * 0.12f);
-    else pos = ImVec2(12.f * s_scale + slot * (w + 10.f * s_scale), 12.f * s_scale);
+    else {
+        float gap = 10.f * s_scale;
+        int cols = std::max(1, static_cast<int>((disp.x - 12.f * s_scale) / (w + gap)));
+        pos = ImVec2(12.f * s_scale + (slot % cols) * (w + gap), 12.f * s_scale + (slot / cols) * disp.y * 0.5f);
+    }
 
     ImGui::SetNextWindowPos(pos, ImGuiCond_FirstUseEver);
     ImGui::SetNextWindowSize(ImVec2(w, 0.f), ImGuiCond_Always);
+    ImGui::SetNextWindowSizeConstraints(ImVec2(w, 0.f), ImVec2(w, std::max(100.f, disp.y - 24.f * s_scale)));
     return ImGui::Begin(title, open, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings);
 }
 
@@ -746,10 +841,20 @@ void drawMenuSettingsWindow() {
 
     smallLabel("UI Scale (0 = auto)");
     {
-        float v = s_userScale;
-        ImGui::SetNextItemWidth(-FLT_MIN);
-        if (ImGui::SliderFloat("##scale", &v, 0.f, 3.f, v < 0.05f ? "Auto" : "%.2fx")) {
-            s_userScale = v < 0.05f ? 0.f : std::max(v, 0.6f);
+        static float draft = 0.f;
+        static bool dragging = false;
+
+        float v = dragging ? draft : s_userScale;
+        bool released = false;
+
+        if (touchSlider("##scale", &v, 0.f, 5.f, v < 0.05f ? "Auto" : "%.2fx", &released)) {
+            draft = v;
+            dragging = true;
+        }
+
+        if (released && dragging) {
+            dragging = false;
+            s_userScale = draft < 0.05f ? 0.f : std::max(draft, 0.6f);
             M()->setSavedValue("xd_ui_scale", static_cast<double>(s_userScale));
         }
     }
@@ -757,8 +862,7 @@ void drawMenuSettingsWindow() {
     smallLabel("Window Opacity");
     {
         float v = s_opacity;
-        ImGui::SetNextItemWidth(-FLT_MIN);
-        if (ImGui::SliderFloat("##opacity", &v, 0.3f, 1.f, "%.2f")) {
+        if (touchSlider("##opacity", &v, 0.3f, 1.f, "%.2f")) {
             s_opacity = v;
             M()->setSavedValue("xd_ui_opacity", static_cast<double>(s_opacity));
         }
@@ -1169,8 +1273,12 @@ bool XDMenu::Ui::beginWindow(char const* title, bool* open, int slot, float widt
     return ::beginWindow(title, open, slot, width, floating);
 }
 
+bool XDMenu::Ui::touchSlider(char const* id, float* value, float lo, float hi, char const* format, bool* released) {
+    return ::touchSlider(id, value, lo, hi, format, released);
+}
+
 float XDMenu::Ui::textSize() {
-    return 13.f * s_scale;
+    return 13.f * std::clamp(ImGui::GetIO().DisplaySize.y / 700.f, 0.85f, 2.5f);
 }
 
 void XDMenu::init() {
