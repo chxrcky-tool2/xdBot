@@ -82,7 +82,7 @@ bool savedBool(char const* id) { return M()->getSavedValue<bool>(id); }
 
 float uiScaleAuto() {
     float h = ImGui::GetIO().DisplaySize.y;
-    return std::clamp(h / 420.f, 1.4f, 5.f);
+    return std::clamp(h / 600.f, 1.f, 3.f);
 }
 
 bool ensureFolder(fs::path const& path) {
@@ -847,7 +847,7 @@ void drawMenuSettingsWindow() {
         float v = dragging ? draft : s_userScale;
         bool released = false;
 
-        if (touchSlider("##scale", &v, 0.f, 5.f, v < 0.05f ? "Auto" : "%.2fx", &released)) {
+        if (touchSlider("##scale", &v, 0.f, 3.f, v < 0.05f ? "Auto" : "%.2fx", &released)) {
             draft = v;
             dragging = true;
         }
@@ -857,6 +857,11 @@ void drawMenuSettingsWindow() {
             s_userScale = draft < 0.05f ? 0.f : std::max(draft, 0.6f);
             M()->setSavedValue("xd_ui_scale", static_cast<double>(s_userScale));
         }
+    }
+
+    if (fullButton("Reset Scale (Auto)")) {
+        s_userScale = 0.f;
+        M()->setSavedValue("xd_ui_scale", 0.0);
     }
 
     smallLabel("Window Opacity");
