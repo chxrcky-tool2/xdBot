@@ -31,3 +31,5 @@ pressing codec will reveal like 2-6 Codec to choose from.
 - ImGui themes to choose from. can make one via adjusting colors in  a new tab called *Themes* which will contain all things for theme choosing.
 
 - Headless physics loop, when 6k tps, your icon player will experience physics of 6k tps, but your screen will show your native Hz/FPS.
+
+Note: If you're gonna fork ZiLko's xdBot or this fork, remind to you to credit ZiLko always.
