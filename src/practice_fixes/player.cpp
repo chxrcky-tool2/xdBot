@@ -180,9 +180,11 @@ PlayerData PlayerPracticeFixes::saveData(PlayerObject* player) {
     data.m_unk838 = player->m_unk838;
     data.m_stateOnGround = player->m_stateOnGround;
     data.m_stateUnk = player->m_stateUnk;
+#if GEODE_COMP_GD_VERSION < 22091
     data.m_stateNoStickX = player->m_stateNoStickX;
     data.m_stateNoStickY = player->m_stateNoStickY;
     data.m_stateUnk2 = player->m_stateUnk2;
+#endif
     data.m_stateBoostX = player->m_stateBoostX;
     data.m_stateBoostY = player->m_stateBoostY;
     data.m_maybeStateForce2 = player->m_maybeStateForce2;
@@ -411,9 +413,11 @@ void PlayerPracticeFixes::applyData(PlayerObject* player, PlayerData data, bool 
     player->m_unk838 = data.m_unk838;
     player->m_stateOnGround = data.m_stateOnGround;
     player->m_stateUnk = data.m_stateUnk;
+#if GEODE_COMP_GD_VERSION < 22091
     player->m_stateNoStickX = data.m_stateNoStickX;
     player->m_stateNoStickY = data.m_stateNoStickY;
     player->m_stateUnk2 = data.m_stateUnk2;
+#endif
     player->m_stateBoostX = data.m_stateBoostX;
     player->m_stateBoostY = data.m_stateBoostY;
     player->m_maybeStateForce2 = data.m_maybeStateForce2;
