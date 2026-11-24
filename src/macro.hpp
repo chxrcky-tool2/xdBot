@@ -275,9 +275,11 @@ struct PlayerData {
     float m_unk838;
     int m_stateOnGround;
     unsigned char m_stateUnk;
+#if GEODE_COMP_GD_VERSION < 22091
     unsigned char m_stateNoStickX;
     unsigned char m_stateNoStickY;
     unsigned char m_stateUnk2;
+#endif
     int m_stateBoostX;
     int m_stateBoostY;
     int m_maybeStateForce2;
