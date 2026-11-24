@@ -16,8 +16,8 @@ What I changed:
 Plans:
 - Compression of format saving, 20 bytes per input and release and more.
 - Labels {
-CPS, style is like 0/0/0, (CPS/Highest CPS reached/total clicks)
-Recording label/Inputs overlay, style is "Recording 0/0" Click/release
+• CPS, style is like 0/0/0, (CPS/Highest CPS reached/total clicks)
+• Recording label/Inputs overlay, style is "Recording 0/0" Click/release. Done! ✓
 }
 - Labels tab to put the features above.
 
